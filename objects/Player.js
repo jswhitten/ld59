@@ -10,11 +10,11 @@ export class Player extends Phaser.GameObjects.Container {
         scene.physics.add.existing(this);
 
         // Tuning
-        this.rotationSpeed = 3.2;     // radians per second
+        this.rotationSpeed = 3;       // radians/sec — full turn in ~2s
         this.thrustAccel = 520;       // forward thrust strength
-        this.reverseAccel = 260;      // reverse thrust strength (weaker)
+        this.reverseAccel = 320;      // reverse thrust strength (weaker)
         this.maxSpeed = 280;
-        this.drag = 0.35;             // low drag — space-ish, but not uncontrollable
+        this.drag = 0.5;              // low drag — space-ish, but not uncontrollable
 
         // Hitbox — circular, centered
         this.body.setCircle(12, -12, -12);
