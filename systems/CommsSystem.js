@@ -5,12 +5,11 @@ const PREFIXES = ['RX', 'FRAG', 'CARRIER', 'BURST'];
 const POOLS = {
     enemyKill: [
         'contact lost.',
-        'you should not see us',
         'oh sh%&',
         'EJECT EJECT EJECT',
         'HULL BREACH IMMINENT',
         "I'LL GET YOU NEXT TIME",
-        'I am a leaf on the wind'
+        'I am a leaf on the wind'    
     ],
     attack: [
         'pursuit course!',
@@ -23,7 +22,10 @@ const POOLS = {
         'fox two, or is this fox one',
         'firing main battery',
         'launching torpedo',
-        'missile away'
+        'missile away',
+        'hello there!',
+        'greetings, human!',
+        'you have entered the danger zone'
     ],
     ram: [
         'collision course accepted',
@@ -31,37 +33,53 @@ const POOLS = {
         'burn straight through',
         'no braking solution',
         'impact vector confirmed',
-        'RAMMING SPEED!'
+        'RAMMING SPEED!',
+        'hold on to something',
+        'there is no defense to the Picard maneuver!',
+        'embracing the void',
+        'if we are going down, we are taking them with us'
     ],
     multiContact: [
         'unregistered pulse detected',
         'carrier wave only',
         'multiple returns / no registry',
-        'relay handshake failed'
+        'relay handshake failed',
+        'signal source unknown',
+        'multiple contacts detected',
+        'are you receiving this?',
+        'the swarm is real',
+        'they are coming'
     ],
     critical: [
         'enemy has taken heavy damage',
         'finish them!',
         'surrender or die!',
-        'prepare for boarding'
+        'prepare for boarding',
+        'critical systems failing',
+        'distress signal received',
+        'SOS SOS SOS'
     ],
     idle: [
         'beacon 12 repeating',
         'mining lane closed',
         'navigation buoy drifting',
         'survey packet corrupt',
-        'long-range telemetry fragment corrupted'
+        'long-range telemetry fragment corrupted',
+        'unidentified signal detected',
+        'I have a bad feeling about this',
+        'message incomplete, please retransmit',
+        'signal strength fading',
+        'is this thing on?',
+        'radio check, do you copy?'
     ],
     rare: [
         'bonus ship not found',
         'hyperspace channel deprecated',
-        'report: large asteroid remains large',
         'wraparound confirmed',
-        'pdp-era carrier tone detected',
         'something answered before we pinged',
-        'your echo arrived first',
-        'the same signal is behind us',
-        'may the farce be with you'
+        'may the farce be with you',
+        'breaker one-seven'
+
     ]
 };
 
