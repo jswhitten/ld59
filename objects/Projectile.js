@@ -17,7 +17,6 @@ export class Projectile extends Phaser.GameObjects.Container {
         this.age = 0;
         this.isDead = false;
         this.pingedEnemies = new Set();
-        this.pingedAsteroids = new Set();
 
         const r = 3;
         this.body.setCircle(r, -r, -r);
@@ -40,7 +39,7 @@ export class Projectile extends Phaser.GameObjects.Container {
         this.postFX.addBloom(0x9fe8ff, 1, 1, 1.8, 3.4, 4);
     }
 
-    update(delta, enemies, asteroids = []) {
+    update(delta, enemies) {
         if (this.isDead) return;
         this.age += delta / 1000;
 
@@ -63,14 +62,6 @@ export class Projectile extends Phaser.GameObjects.Container {
             }
         }
 
-        for (const asteroid of asteroids) {
-            if (asteroid.isDead) continue;
-            if (asteroid.isMeteoroid) continue;
-            const d = wrappedDist(this.x, this.y, asteroid.x, asteroid.y, worldSize);
-            if (d <= this.revealRadius + asteroid.radius) {
-                asteroid.reveal(0.7);
-            }
-        }
     }
 
     hitEnemy(enemy) {

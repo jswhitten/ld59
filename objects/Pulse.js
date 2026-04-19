@@ -71,7 +71,6 @@ export class Pulse {
             const d = wrappedDist(this.originX, this.originY, asteroid.x, asteroid.y, worldSize);
             if (d >= this.prevRadius - asteroid.radius && d <= this.currentRadius + asteroid.radius) {
                 const revealStrength = 0.72 + 0.2 * this.chargeLevel;
-                asteroid.reveal(revealStrength);
                 if (!this.pingedAsteroids.has(asteroid)) {
                     this.pingedAsteroids.add(asteroid);
                     // Visual echo ring — slightly dimmer than enemy echoes (rock, not contact)

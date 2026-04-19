@@ -104,7 +104,6 @@ export class GameScene extends Phaser.Scene {
         this.survivalTime = 0;
         this.spawnTimer = 4;
         this.shipVisualRange = 320;
-        this.objectVisualRange = 360;
         this.enemyDetectionRange = 420;
         this.shieldDamagePerHit = 72;
         this.meteoroidDamagePerHit = 22;
@@ -328,7 +327,7 @@ export class GameScene extends Phaser.Scene {
             const proj = this.projectiles[i];
             if (proj.isDead) { this.projectiles.splice(i, 1); continue; }
 
-            proj.update(delta, this.enemies, this.asteroids);
+            proj.update(delta, this.enemies);
             this.physics.world.wrap(proj, 8);
 
             for (const asteroid of this.asteroids) {
@@ -336,7 +335,6 @@ export class GameScene extends Phaser.Scene {
                 if (asteroid.isMeteoroid) continue;
                 const d = wrappedDist(proj.x, proj.y, asteroid.x, asteroid.y, this.worldSize);
                 if (d < asteroid.radius + 4) {
-                    asteroid.reveal(1);
                     proj.die();
                     break;
                 }
@@ -371,7 +369,6 @@ export class GameScene extends Phaser.Scene {
                 if (asteroid.isDead || asteroid.isMeteoroid) continue;
                 const d = wrappedDist(proj.x, proj.y, asteroid.x, asteroid.y, this.worldSize);
                 if (d < asteroid.radius + proj.radius) {
-                    asteroid.reveal(0.7);
                     proj.die();
                     blocked = true;
                     break;
@@ -1138,12 +1135,6 @@ export class GameScene extends Phaser.Scene {
             if (enemy.isDead) continue;
             const d = wrappedDist(this.player.x, this.player.y, enemy.x, enemy.y, this.worldSize);
             enemy.setLocalVisibility(proximityAlpha(d, this.shipVisualRange, 0.28, 0.95));
-        }
-
-        for (const asteroid of this.asteroids) {
-            if (asteroid.isDead) continue;
-            const d = wrappedDist(this.player.x, this.player.y, asteroid.x, asteroid.y, this.worldSize);
-            asteroid.setLocalVisibility(proximityAlpha(d, this.objectVisualRange, 0.32, 0.72));
         }
     }
 

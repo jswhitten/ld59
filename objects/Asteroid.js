@@ -1,5 +1,5 @@
 // Asteroid
-// Moving scanner clutter: always faintly visible, brighter when close or pinged.
+// Moving scanner clutter: always visible grey rocks.
 // Asteroids drift, rotate, bounce off each other, and larger ones can split.
 
 export class Asteroid extends Phaser.GameObjects.Container {
@@ -10,11 +10,6 @@ export class Asteroid extends Phaser.GameObjects.Container {
 
         this.radius = radius;
         this.isMeteoroid = radius <= 8;
-        this.revealDuration = 0.18;
-        this.revealTimer = 0;
-        this.revealBrightness = 0.85;
-        this.baseAlpha = this.isMeteoroid ? 0.34 : 0.24;
-        this.localVisibility = 0;
         this.rotationRate = Phaser.Math.FloatBetween(-0.85, 0.85) * (42 / Math.max(12, radius));
         this.mass = radius * radius;
         this.collisionCooldown = 0;
@@ -31,19 +26,6 @@ export class Asteroid extends Phaser.GameObjects.Container {
 
         this.setDepth(1);
         this.createVisual();
-        this.setAlpha(this.baseAlpha);
-    }
-
-    get isRevealed() { return this.revealTimer > 0; }
-    get radarAlpha() { return Math.max(this.baseAlpha, this.localVisibility, this.revealTimer > 0 ? 0.75 : 0); }
-
-    reveal(brightness = 0.85, duration = this.revealDuration) {
-        this.revealTimer = duration;
-        this.revealBrightness = brightness;
-    }
-
-    setLocalVisibility(alpha) {
-        this.localVisibility = Math.max(0, Math.min(1, alpha));
     }
 
     die() {
@@ -99,14 +81,5 @@ export class Asteroid extends Phaser.GameObjects.Container {
         const dt = delta / 1000;
         this.rotation += this.rotationRate * dt;
         this.collisionCooldown = Math.max(0, this.collisionCooldown - dt);
-
-        let revealAlpha = 0;
-        if (this.revealTimer > 0) {
-            this.revealTimer -= dt;
-            const fade = Math.min(1, this.revealTimer / this.revealDuration);
-            revealAlpha = Math.max(0, fade) * this.revealBrightness;
-        }
-
-        this.setAlpha(Math.max(this.baseAlpha, this.localVisibility, revealAlpha));
     }
 }

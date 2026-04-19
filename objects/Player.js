@@ -35,19 +35,23 @@ export class Player extends Phaser.GameObjects.Container {
     createVisual() {
         const g = this.scene.add.graphics();
 
-        // Ship body — minimal triangle drawn pointing right at rotation 0.
-        g.lineStyle(1.5, 0xffddaa, 0.95);
+        // Engine glow
+        g.fillStyle(0xff3300, 0.9);
+        g.fillCircle(-8, 0, 1.5);
+
+        // Ship body — triangle with a rear notch
+        g.lineStyle(1.5, 0xffaa99);
         g.beginPath();
-        g.moveTo(12, 0);     // nose
-        g.lineTo(-9, 7);     // rear right
-        g.lineTo(-5, 0);     // rear notch
-        g.lineTo(-9, -7);    // rear left
+        g.moveTo(9, 0);
+        g.lineTo(-9, 7);
+        g.lineTo(-6, 0);
+        g.lineTo(-9, -7);
         g.closePath();
         g.strokePath();
 
-        // Small interior running light near the nose.
-        g.fillStyle(0xffeecc, 0.9);
-        g.fillCircle(3, 0, 1.6);
+        // Front window
+        g.fillStyle(0x3366ff, 0.9);
+        g.fillCircle(2, 0, 1.5);
 
         this.visual = g;
         this.thrustFlare = null;
