@@ -661,10 +661,10 @@ export class AudioSystem {
 
     playShot() {
         this.resume();
-        this.playBfxrTorpedoShot();
+        this.playTorpedoShot();
     }
 
-    playBfxrTorpedoShot(options = {}) {
+    playTorpedoShot(options = {}) {
         if (!this.enabled || !this.ctx) return;
 
         const now = this.ctx.currentTime;
@@ -794,7 +794,7 @@ export class AudioSystem {
 
     playEnemyShot() {
         this.resume();
-        this.playBfxrTorpedoShot({ pitchScale: 0.58, gainScale: 0.72, noiseScale: 0.85 });
+        this.playTorpedoShot({ pitchScale: 0.58, gainScale: 0.72, noiseScale: 0.85 });
     }
 
     playDecloak() {
@@ -938,36 +938,37 @@ export class AudioSystem {
 
     playShieldHit() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 1.35, gainScale: 0.62, noiseScale: 0.38, decayScale: 0.78 });
+        this.playImpact({ pitchScale: 1, gainScale: 0.7, noiseScale: 0.4, decayScale: 1.5, boomScale: 1, reverb: 0.3 });
     }
 
     playHullHit() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 0.86, gainScale: 0.9, noiseScale: 0.72, decayScale: 1.0 });
+        this.playImpact({ pitchScale: 0.3, gainScale: 1, noiseScale: 1, decayScale: 1, boomScale: 1, reverb: 0.1 });
     }
 
     playKill() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 0.72, gainScale: 1.0, noiseScale: 0.9, decayScale: 1.15 });
+        this.playImpact({ pitchScale: 0.4, gainScale: 1.2, noiseScale: 1.5, decayScale: 2, boomScale: 2, reverb: 0.5 });
     }
 
     playMeteoroidPop() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 1.55, gainScale: 0.42, noiseScale: 0.55, decayScale: 0.55 });
+        this.playImpact({ pitchScale: 0.2, gainScale: 0.2, noiseScale: 1.3, decayScale: 2, boomScale: 1, reverb: 0.3 });
     }
 
     playAsteroidBump() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 0.52, gainScale: 0.58, noiseScale: 0.45, decayScale: 0.72 });
+        this.playImpact({ pitchScale: 0.2, gainScale: 0.5, noiseScale: 0.2, decayScale: 1, boomScale: 2, reverb: 0.2 });
     }
 
     playDeath() {
         this.resume();
-        this.playBfxrImpact({ pitchScale: 0.48, gainScale: 1.35, noiseScale: 1.15, decayScale: 1.7 });
-        this.playBfxrImpact({ pitchScale: 0.34, gainScale: 0.8, noiseScale: 0.75, decayScale: 2.15, delay: 0.08 });
+        this.playImpact({ pitchScale: 0.4, gainScale: 1.5, noiseScale: 1.3, decayScale: 2, boomScale: 1.5, reverb: 0.3 });
+        this.playImpact({ pitchScale: 0.3, gainScale: 1, noiseScale: 1.0, decayScale: 3, boomScale: 1, delay: 0.1, reverb: 0.5 });
+        this.playImpact({ pitchScale: 1, gainScale: 0.4, noiseScale: 1.3, decayScale: 0.6, delay: 0.2, reverb: 0.2 });
     }
 
-    playBfxrImpact(options = {}) {
+    playImpact(options = {}) {
         if (!this.enabled || !this.ctx) return;
 
         const now = this.ctx.currentTime + (options.delay ?? 0);
@@ -975,75 +976,89 @@ export class AudioSystem {
         const gainScale = options.gainScale ?? 1;
         const noiseScale = options.noiseScale ?? 1;
         const decayScale = options.decayScale ?? 1;
-        const attack = 0.04;
-        const sustain = 0.04;
-        const decay = 0.35 * decayScale;
-        const duration = attack + sustain + decay;
-        const startFreq = (70 + 0.29 * 620) * pitchScale;
-        const sustainFreq = startFreq * 0.76;
-        const endFreq = Math.max(24, startFreq * 0.38);
-        const masterGain = 0.77 * 0.28 * gainScale;
+        const boomScale = options.boomScale ?? 0.75;
+        const duration = 0.42 * decayScale;
+        const startFreq = 250 * pitchScale;
+        const endFreq = Math.max(24, startFreq * 0.32);
+        const masterGain = 0.26 * gainScale;
 
         const osc = this.ctx.createOscillator();
         const amp = this.ctx.createGain();
-        const lowpass = this.ctx.createBiquadFilter();
+        const boomAmp = this.ctx.createGain();
+        const boomOsc = this.ctx.createOscillator();
         const noiseSource = this.ctx.createBufferSource();
         const noiseFilter = this.ctx.createBiquadFilter();
         const noiseGain = this.ctx.createGain();
         const mix = this.ctx.createGain();
-        const sampleRate = this.ctx.sampleRate;
-        const noiseBuffer = this.ctx.createBuffer(1, Math.ceil(duration * sampleRate), sampleRate);
-        const noiseData = noiseBuffer.getChannelData(0);
 
-        for (let i = 0; i < noiseData.length; i++) {
-            const tail = 1 - i / noiseData.length;
-            noiseData[i] = (Math.random() * 2 - 1) * (0.45 + tail * 0.55);
-        }
-
-        osc.type = 'triangle';
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(startFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(sustainFreq, now + attack + sustain);
         osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
-
         amp.gain.setValueAtTime(0.0001, now);
-        amp.gain.linearRampToValueAtTime(masterGain, now + attack);
-        amp.gain.setValueAtTime(masterGain * 1.82, now + attack + 0.012);
-        amp.gain.setValueAtTime(masterGain * 0.82, now + attack + sustain);
+        amp.gain.linearRampToValueAtTime(masterGain * 1.5, now + 0.012);
+        amp.gain.exponentialRampToValueAtTime(masterGain * 0.35, now + 0.055);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 5200;
-        lowpass.Q.value = 0.2;
-
-        noiseSource.buffer = noiseBuffer;
-        noiseFilter.type = 'lowpass';
-        noiseFilter.frequency.value = 3600;
-        noiseFilter.Q.value = 0.3;
-        noiseGain.gain.setValueAtTime(0.0001, now);
-        noiseGain.gain.linearRampToValueAtTime(masterGain * 0.82 * noiseScale, now + attack * 0.35);
-        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + attack + sustain + decay * 0.72);
-
-        osc.connect(lowpass);
-        lowpass.connect(amp);
+        osc.connect(amp);
         amp.connect(mix);
+
+        boomOsc.type = 'sine';
+        boomOsc.frequency.setValueAtTime(Math.max(28, startFreq * 0.32), now);
+        boomOsc.frequency.exponentialRampToValueAtTime(Math.max(18, endFreq * 0.55), now + duration * 1.15);
+        boomAmp.gain.setValueAtTime(0.0001, now);
+        boomAmp.gain.linearRampToValueAtTime(masterGain * boomScale, now + 0.026);
+        boomAmp.gain.exponentialRampToValueAtTime(0.0001, now + duration * 1.18);
+        boomOsc.connect(boomAmp);
+        boomAmp.connect(mix);
+
+        noiseSource.buffer = this.createNoiseBuffer(duration);
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(4200, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(700, now + duration);
+        noiseFilter.Q.value = 0.45;
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.linearRampToValueAtTime(masterGain * 1.15 * noiseScale, now + 0.004);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.9);
         noiseSource.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(mix);
         mix.connect(this.fxBus);
 
+        if (this.fxReverbInput && options.reverb) {
+            const send = this.ctx.createGain();
+            send.gain.value = options.reverb;
+            mix.connect(send);
+            send.connect(this.fxReverbInput);
+            setTimeout(() => send.disconnect(), (duration + 0.8) * 1000);
+        }
+
         osc.start(now);
+        boomOsc.start(now);
         noiseSource.start(now);
         osc.stop(now + duration + 0.04);
+        boomOsc.stop(now + duration * 1.2 + 0.04);
         noiseSource.stop(now + duration + 0.02);
-        osc.onended = () => {
+
+        boomOsc.onended = () => {
             osc.disconnect();
             amp.disconnect();
-            lowpass.disconnect();
+            boomOsc.disconnect();
+            boomAmp.disconnect();
             noiseSource.disconnect();
             noiseFilter.disconnect();
             noiseGain.disconnect();
             mix.disconnect();
         };
+    }
+
+    createNoiseBuffer(duration) {
+        const sampleRate = this.ctx.sampleRate;
+        const buffer = this.ctx.createBuffer(1, Math.ceil(duration * sampleRate), sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+            const tail = 1 - i / data.length;
+            data[i] = (Math.random() * 2 - 1) * (0.35 + tail * 0.65);
+        }
+        return buffer;
     }
 
     playTone({ frequency, slideTo = null, type = 'sine', duration = 0.15, gain = 0.08, color = 'lowpass', filterFrequency = 1200 }) {
