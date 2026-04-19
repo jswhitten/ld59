@@ -41,6 +41,7 @@ export class AudioSystem {
         this.upperFilt = null;
         this.upperBeatOsc = null;
         this.enemyVoices = [];
+        this.voiceContactTimer = 0;
         this.lowShieldTimer = 0;
         this.stoppedForGameOver = false;
         this.gameOverAmbient = false;
@@ -210,6 +211,8 @@ export class AudioSystem {
 
         this.stoppedForGameOver = false;
         this.gameOverAmbient = false;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
         this.fxFadeGain.gain.cancelScheduledValues(now);
         this.fxFadeGain.gain.setTargetAtTime(1, now, 0.12);
 
@@ -316,21 +319,28 @@ export class AudioSystem {
     }
 
     updateEnemyVoices(feed, now) {
-        const contacts = feed.enemies
-            .filter(enemy => !enemy.isDead)
-            .map(enemy => ({
-                enemy,
-                distance: wrappedDist(feed.playerX, feed.playerY, enemy.x, enemy.y, feed.worldSize)
-            }))
-            .filter(contact => contact.distance < 1450)
-            .sort((a, b) => a.distance - b.distance)
-            .slice(0, this.enemyVoices.length);
+        // Re-sort closest contacts every 80 ms rather than every frame.
+        this.voiceContactTimer -= (now - (this._lastVoiceNow ?? now));
+        this._lastVoiceNow = now;
+        if (this.voiceContactTimer <= 0) {
+            this._voiceContacts = feed.enemies
+                .filter(enemy => !enemy.isDead)
+                .map(enemy => ({
+                    enemy,
+                    distance: wrappedDist(feed.playerX, feed.playerY, enemy.x, enemy.y, feed.worldSize)
+                }))
+                .filter(contact => contact.distance < 1450)
+                .sort((a, b) => a.distance - b.distance)
+                .slice(0, this.enemyVoices.length);
+            this.voiceContactTimer = 0.08;
+        }
+        const contacts = this._voiceContacts ?? [];
 
         for (let i = 0; i < this.enemyVoices.length; i++) {
             const voice = this.enemyVoices[i];
             const contact = contacts[i];
 
-            if (!contact || feed.gameOver) {
+            if (!contact || contact.enemy.isDead || feed.gameOver) {
                 voice.gain.gain.setTargetAtTime(0, now, 0.18);
                 continue;
             }
@@ -346,6 +356,7 @@ export class AudioSystem {
             const closeBoost = Math.pow(proximity, 1.7);
             const isBurst  = enemy.constructor.type === 'burst';
             const isSeeker = enemy.constructor.type === 'seeker';
+            // Drifter: 108 Hz (low triangle hum), Seeker: 175 Hz (mid sawtooth), Burst: 260 Hz (high square).
             const baseFreq = isBurst ? 260 : isSeeker ? 175 : 108;
             const tremolo  = isBurst ? 0.45 + 0.55 * Math.sin(now * 22) : isSeeker ? 0.7 + 0.3 * Math.sin(now * 5) : 1;
             const enemyVX = enemy.body?.velocity?.x ?? 0;
@@ -1248,5 +1259,11 @@ export class AudioSystem {
         amp.connect(this.fxBus);
         source.start(now);
         source.onended = () => { source.disconnect(); filter.disconnect(); amp.disconnect(); };
+    }
+
+    destroy() {
+        if (!this.ctx) return;
+        try { this.ctx.close(); } catch (_) {}
+        this.ctx = null;
     }
 }
