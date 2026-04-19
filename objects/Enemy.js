@@ -125,8 +125,8 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.combatTimer = Math.max(0, this.combatTimer - dt);
         this.updateCloak(dt);
 
-        // Alpha: fully visible until the last 0.8 s, then fade to transparent.
-        // revealBrightness scales the peak - weak pulses give a dimmer glimpse.
+        // Pulse/projectile reveal is brief and fades over revealDuration.
+        // revealBrightness scales the peak; weak pulses give a dimmer glimpse.
         let revealAlpha = 0;
         if (this.revealTimer > 0) {
             this.revealTimer -= dt;
@@ -137,7 +137,7 @@ export class Enemy extends Phaser.GameObjects.Container {
         const decloakAlpha = this.cloakAlpha;
         this.setAlpha(Math.max(revealAlpha, decloakAlpha));
 
-        // Alert indicator: faint pulsing red ring, visible only when revealed.
+        // Alert indicator: faint pulsing red ring, visible when the enemy is visible.
         this.alertGfx.clear();
         if (this.isAlert) {
             const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.006);
