@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // UIScene is launched once and never restarted — it reads game state via scene.get('GameScene').
         if (!this.scene.isActive('UIScene')) this.scene.launch('UIScene');
 
         this.worldSize = 5000;
@@ -40,6 +41,7 @@ export class GameScene extends Phaser.Scene {
         // Energy system — created before player so UIScene can read it immediately.
         this.energy = new EnergySystem();
         this.audioSystem = new AudioSystem(this);
+        this.events.once('shutdown', () => this.audioSystem?.destroy());
         this.comms = new CommsSystem(this);
 
         // Player
@@ -48,6 +50,7 @@ export class GameScene extends Phaser.Scene {
         // Camera is manually centered each frame. Smooth follow lerps across the
         // numeric wrap seam, which makes the player visibly jump at world edges.
         this.cameras.main.setBackgroundColor('#020610');
+        // WebGL only — Canvas renderer (Safari iOS, some Chromebooks) silently ignores postFX.
         this.cameras.main.postFX.addBloom(0xffffff, 0, 0, 1, 0.6, 4);
         this.centerCameraOnPlayer();
 
@@ -215,7 +218,7 @@ export class GameScene extends Phaser.Scene {
         if (t < 25) return Drifter;
 
         if (t >= 70) {
-            const burstChance = Math.min(0.22, 0.07 + (t - 70) * 0.0025);
+            const burstChance = Math.min(0.22, 0.05 + (t - 70) * 0.0025);
             if (Math.random() < burstChance) return Burst;
         }
 
@@ -1061,7 +1064,8 @@ export class GameScene extends Phaser.Scene {
 
     createFloatingScore(x, y, points, options = {}) {
         const color = options.collision ? '#ffddaa' : '#7fffdf';
-        const label = `+${points}`;
+        const mult = options.multiplier ?? 1;
+        const label = mult > 1 ? `+${points} ×${mult}` : `+${points}`;
         const text = this.add.text(x, y - 22, label, {
             fontFamily: 'Share Tech Mono, monospace',
             fontSize: options.collision ? '20px' : '18px',
@@ -1125,6 +1129,7 @@ export class GameScene extends Phaser.Scene {
             this.spawnEnemyAwayFromPlayer(this.chooseEnemyType(), 760);
         }
 
+        // Interval ramps from 5.2s at t=0 down to 1.4s floor at ~110s.
         this.spawnTimer = Math.max(1.4, 5.2 - this.survivalTime * 0.035);
     }
 
