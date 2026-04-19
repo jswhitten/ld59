@@ -30,8 +30,6 @@ export class EnergySystem {
         this.capMax    = 100;
         this.capCharge = 0;
         this.isCharging = false;   // set by GameScene each frame based on key state
-
-        this._wasLow = false;
     }
 
     update(delta) {
@@ -88,13 +86,4 @@ export class EnergySystem {
     get capFraction() { return this.capCharge / this.capMax; }
     get shieldFraction() { return this.shield / this.shieldMax; }
     get isLow()       { return this.current < this.lowThreshold; }
-
-    // Returns true only on the frame energy first drops below the low threshold.
-    // Use to edge-trigger the low-energy audio warning.
-    checkLowTransition() {
-        const low = this.isLow;
-        const triggered = low && !this._wasLow;
-        this._wasLow = low;
-        return triggered;
-    }
 }

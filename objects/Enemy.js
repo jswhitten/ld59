@@ -39,7 +39,6 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.fireTimer = Phaser.Math.FloatBetween(0.4, 1.6);
         this.shotSpeed = 280;
         this.aimError = 0.1;
-        this.isCloaked = true;
         this.cloakPhase = 'cloaked';
         this.cloakTimer = 0;
         this.decloakDuration = 0.5;
@@ -76,9 +75,7 @@ export class Enemy extends Phaser.GameObjects.Container {
     // Override in subclasses to draw the wireframe contact silhouette.
     createVisual() {}
 
-    get isRevealed() { return this.revealTimer > 0; }
     get isAlert()    { return this.alertTimer > 0; }
-    get isDecloaked() { return this.cloakPhase === 'decloaked'; }
     get isVisible()  { return this.revealTimer > 0 || this.cloakAlpha > 0.02; }
     get isActuallyVisible() { return this.cloakAlpha > 0.16; }
 
@@ -161,7 +158,6 @@ export class Enemy extends Phaser.GameObjects.Container {
             if (this.cloakTimer <= 0) {
                 this.cloakPhase = 'decloaked';
                 this.cloakTimer = 0;
-                this.isCloaked = false;
                 this.attackVisibleTimer = this.attackWindow;
             }
             return;
@@ -172,7 +168,6 @@ export class Enemy extends Phaser.GameObjects.Container {
             if (this.cloakTimer <= 0) {
                 this.cloakPhase = 'cloaked';
                 this.cloakTimer = 0;
-                this.isCloaked = true;
                 this.attackVisibleTimer = 0;
             }
             return;
@@ -188,7 +183,6 @@ export class Enemy extends Phaser.GameObjects.Container {
         if (this.cloakPhase === 'decloaking' || this.cloakPhase === 'decloaked') return;
         this.cloakPhase = 'decloaking';
         this.cloakTimer = this.decloakDuration;
-        this.isCloaked = true;
         this.scene.audioSystem?.playDecloak?.();
     }
 
@@ -196,7 +190,6 @@ export class Enemy extends Phaser.GameObjects.Container {
         if (this.cloakPhase === 'cloaked' || this.cloakPhase === 'cloaking') return;
         this.cloakPhase = 'cloaking';
         this.cloakTimer = this.recloakDuration;
-        this.isCloaked = true;
         this.scene.audioSystem?.playRecloak?.();
     }
 
@@ -246,7 +239,7 @@ export class Enemy extends Phaser.GameObjects.Container {
             this.combatState === 'attackRun';
         return this.isAlert &&
             canAttackState &&
-            !this.isCloaked &&
+            this.cloakPhase === 'decloaked' &&
             distance <= this.attackRange &&
             this.fireTimer <= 0;
     }

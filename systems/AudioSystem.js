@@ -251,7 +251,6 @@ export class AudioSystem {
         if (underAttack) {
             if (this.attackBeatTime === null) {
                 this.attackBeatTime  = now;
-                this.attackBeatIndex = 0;
             }
             while (this.attackBeatTime < now + LOOKAHEAD) {
                 const burstStart = Math.max(this.attackBeatTime, now);
@@ -259,12 +258,10 @@ export class AudioSystem {
                     this.scheduleKick(burstStart + hit.offset, hit.level);
                 }
                 this.attackBeatTime += BURST_GAP;
-                this.attackBeatIndex++;
             }
             this.attackDrumGain.gain.setTargetAtTime(0.88, now, 0.2);
         } else {
             this.attackBeatTime  = null;
-            this.attackBeatIndex = 0;
             this.attackDrumGain.gain.setTargetAtTime(0, now, 1.5);
         }
 
@@ -569,7 +566,6 @@ export class AudioSystem {
         this.attackDrumGain.gain.value = 0;
         this.attackDrumGain.connect(this.ambientOut);
         this.attackBeatTime = null;
-        this.attackBeatIndex = 0;
 
         // Critical heartbeat — two detuned sine oscillators, fades in when hull/shield is critical.
         const heartA = this.ctx.createOscillator();
@@ -625,28 +621,6 @@ export class AudioSystem {
         osc.stop(time + 0.62);
         tail.stop(time + 0.86);
         tail.onended = () => { osc.disconnect(); oscGain.disconnect(); tail.disconnect(); tailGain.disconnect(); filter.disconnect(); };
-    }
-
-    // Synthesized snare: filtered noise burst.
-    scheduleSnare(time, level = 1.0) {
-        const buf = this.ctx.createBuffer(1, Math.ceil(0.14 * this.ctx.sampleRate), this.ctx.sampleRate);
-        const data = buf.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-        const src = this.ctx.createBufferSource();
-        const filt = this.ctx.createBiquadFilter();
-        const gain = this.ctx.createGain();
-        src.buffer = buf;
-        filt.type = 'bandpass';
-        filt.frequency.value = 1800;
-        filt.Q.value = 0.8;
-        gain.gain.setValueAtTime(0.5 * level, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
-        src.connect(filt);
-        filt.connect(gain);
-        gain.connect(this.attackDrumGain);
-        src.start(time);
-        src.stop(time + 0.15);
-        src.onended = () => { src.disconnect(); filt.disconnect(); gain.disconnect(); };
     }
 
     transitionAmbientForGameOver(now) {
