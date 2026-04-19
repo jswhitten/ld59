@@ -55,8 +55,7 @@ export class AudioSystem {
         this.master.gain.value = 0.95;
         this.master.connect(this.ctx.destination);
 
-        const storedGain = Number(window.localStorage?.getItem('pulse.effectsGain'));
-        this.effectsGain = Number.isFinite(storedGain) ? clamp(storedGain, 0, 2) : 1;
+        this.effectsGain = 1;
 
         this.fxBus = this.ctx.createGain();
         this.fxBus.gain.value = effectsGainToAmplitude(this.effectsGain);
@@ -271,9 +270,6 @@ export class AudioSystem {
 
     setEffectsGain(value) {
         this.effectsGain = clamp(value, 0, 2);
-        if (typeof window !== 'undefined') {
-            window.localStorage?.setItem('pulse.effectsGain', String(this.effectsGain));
-        }
         if (this.enabled && this.ctx && this.fxBus) {
             this.fxBus.gain.cancelScheduledValues(this.ctx.currentTime);
             this.fxBus.gain.setTargetAtTime(effectsGainToAmplitude(this.effectsGain), this.ctx.currentTime, 0.03);
@@ -994,7 +990,7 @@ export class AudioSystem {
         noiseSource.buffer = noiseBuffer;
         noiseSource.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
+        noiseGain.connect(this.fxBus);
         noiseSource.start(now);
         noiseSource.stop(now + duration);
         noiseSource.onended = () => { noiseSource.disconnect(); noiseFilter.disconnect(); noiseGain.disconnect(); };
