@@ -60,6 +60,12 @@ export class GameScene extends Phaser.Scene {
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.input.keyboard.addCapture(Phaser.Input.Keyboard.KeyCodes.F2);
+        this.input.keyboard.on('keydown-F2', event => {
+            if (!event.altKey) return;
+            event.preventDefault();
+            this.spawnDebugEnemyCluster();
+        });
 
         // Game object pools
         this.pulses      = [];
@@ -203,6 +209,25 @@ export class GameScene extends Phaser.Scene {
         const enemy = new EnemyClass(this, x, y);
         this.enemies.push(enemy);
         return enemy;
+    }
+
+    spawnDebugEnemyCluster() {
+        if (!this.player || this.gameOver) return;
+        const types = [Drifter, Seeker, Burst, Drifter, Seeker, Burst];
+        const half = this.worldSize / 2;
+
+        for (let i = 0; i < types.length; i++) {
+            const angle = -Math.PI / 2 + i * Math.PI * 2 / types.length;
+            const radius = 360 + (i % 2) * 70;
+            const wrap = value => Phaser.Math.Wrap(value + half, 0, this.worldSize) - half;
+            const enemy = new types[i](
+                this,
+                wrap(this.player.x + Math.cos(angle) * radius),
+                wrap(this.player.y + Math.sin(angle) * radius)
+            );
+            enemy.alert(this.player.x, this.player.y);
+            this.enemies.push(enemy);
+        }
     }
 
     chooseEnemyType() {

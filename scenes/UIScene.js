@@ -139,7 +139,7 @@ export class UIScene extends Phaser.Scene {
         // Radar — bottom-center (createRadar reads this.instrumentY)
         this.createRadar(W, H);
 
-        // Debug overlay — F1 to toggle
+        // Debug overlay — Alt+F1 to toggle
         this.debugMode = false;
         this.debugGfx  = this.add.graphics().setDepth(900);
         this.debugLabels = [];
@@ -149,7 +149,9 @@ export class UIScene extends Phaser.Scene {
             color: '#ff9944'
         }).setOrigin(0.5, 0).setDepth(902).setAlpha(0);
         this.input.keyboard.addCapture(Phaser.Input.Keyboard.KeyCodes.F1);
-        this.input.keyboard.on('keydown-F1', () => {
+        this.input.keyboard.on('keydown-F1', event => {
+            if (!event.altKey) return;
+            event.preventDefault();
             this.debugMode = !this.debugMode;
             this.debugBadge.setAlpha(this.debugMode ? 0.80 : 0);
             if (!this.debugMode) {

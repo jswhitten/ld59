@@ -27,9 +27,8 @@ Any equivalent static server works.
 - Hold `Space` - charge scanner pulse
 - Release `Space` - emit scanner pulse
 - `R` or `Enter` - restart after game over
-- `F1` - debug signal overlay
 
-The ship fires in the direction it is facing. Movement is Asteroids-style: thrust adds momentum, and the world wraps at the edges.
+The ship fires or thrusts in the direction it is facing. The world wraps at the edges.
 
 The more charge you give to a scanner pulse, the farther it will travel. This will show you where more enemies are, but it will also let them know where you are.
 
@@ -62,9 +61,9 @@ Bottom-left panel:
 - `SHIELD` - blue segmented shield bar. Shields absorb most damage and visually glow around the ship.
 - `HULL` - red hull bar. When this reaches zero, the ship breaks apart and the game ends.
 - `ENERGY` - cyan weapon/scanner energy. Shots spend this pool; it recharges over time.
-- `SCANNER CHARGE` - amber pulse capacitor. Hold `Space` to fill it, release to send the pulse.
+- `SCANNER CHARGE` - amber radar pulse capacitor. Hold `Space` to fill it, release to send the pulse.
 
-When shields are damaged, they recharge separately. Shield repair is faster when the main energy pool is full.
+Shields recharge faster when the main energy pool isn't recharging.
 
 ### Long Range Scanner
 
@@ -98,13 +97,11 @@ Enemy signals are Doppler-shifted: approaching ships shift upward, receding ship
 - **Seekers** - faster hunters that curve into attack runs.
 - **Bursts** - kamikaze dash ships with a pause-and-burst rhythm.
 
-Enemies decloak to fire, then recloak after their attack window. They try to avoid rocks and each other, but collisions can still happen.
+Enemies decloak to fire, then recloak after their attack window. They try to avoid rocks and each other.
 
 ## Audio
 
 `Pulse` uses procedural Web Audio synthesis. Headphones help: enemy EM signatures pan by direction, scanner pings and echoes reveal contacts, comm bursts pollute the sensor display, and the ambient music responds to combat and critical damage.
-
-The music continues after game over; active sound effects fade out.
 
 ## Game Over
 
