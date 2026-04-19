@@ -6,6 +6,8 @@
 
 `Pulse` is an atmospheric scanner-combat arcade game about fighting in the dark. Enemy ships are usually cloaked, so you survive by listening to their emissions, reading the sensor display, firing into likely positions, and choosing when to reveal the arena with a charged scanner pulse.
 
+![Pulse screenshot](Pulse-screenshot.png)
+
 ## Running Locally
 
 This project uses ES modules and Phaser from a CDN, so serve it over HTTP instead of opening `index.html` with `file://`.
