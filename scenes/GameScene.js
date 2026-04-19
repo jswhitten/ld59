@@ -62,7 +62,6 @@ export class GameScene extends Phaser.Scene {
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.input.keyboard.addCapture(Phaser.Input.Keyboard.KeyCodes.F2);
         this.input.keyboard.on('keydown-F2', event => {
-            if (!event.altKey) return;
             event.preventDefault();
             this.spawnDebugEnemyCluster();
         });
