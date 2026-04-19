@@ -85,26 +85,19 @@ export class Pulse {
             }
         }
 
-        // Fuzzy ring: Gaussian alpha profile across the band — no hard edge.
         this.gfx.clear();
         const t = this.currentRadius / this.maxRadius;
         const alpha = Math.pow(1 - t, 0.5) * 0.95;
 
         if (alpha > 0.01) {
-            const ringWidth = 90;
-            const numLayers = 10;
-            const strokeW   = (ringWidth / numLayers) * 2.0;
-
-            for (let i = 0; i < numLayers; i++) {
-                const u      = i / (numLayers - 1);
-                const offset = (u - 0.5) * ringWidth;
-                const r      = this.currentRadius + offset;
-                if (r < 0) continue;
-
-                const gauss      = Math.exp(-Math.pow((u - 0.5) * 4.2, 2));
-                const layerAlpha = alpha * gauss * 0.38;
-
-                this.gfx.lineStyle(strokeW, 0x7fffdf, layerAlpha);
+            for (const layer of [
+                { offset: -38, width: 10, alpha: 0.3 },
+                { offset:   0, width: 18, alpha: 0.6 },
+                { offset:  28, width: 10, alpha: 0.5 },
+            ]) {
+                const r = this.currentRadius + layer.offset;
+                if (r <= 0) continue;
+                this.gfx.lineStyle(layer.width, 0x7fffdf, alpha * layer.alpha);
                 this.gfx.strokeCircle(this.originX, this.originY, r);
             }
         }

@@ -12,17 +12,13 @@ export class EchoRing {
         this.maxRadius   = 120 + 280 * strength;   // 120–400 px — noticeably smaller than pulse (260–2160)
         this.speed       = 420;                    // px/s — slow enough to watch arrive and fade
         this.currentRadius = 4;
-        this.prevRadius    = 0;
         this.done = false;
 
-        this.gfx = scene.add.graphics();
-        this.gfx.setDepth(4);
+        this.gfx = scene.add.graphics().setDepth(4);
     }
 
     update(delta) {
-        const dt = delta / 1000;
-        this.prevRadius    = this.currentRadius;
-        this.currentRadius += this.speed * dt;
+        this.currentRadius += this.speed * delta / 1000;
 
         const t = this.currentRadius / this.maxRadius;
         if (t >= 1) {
@@ -31,26 +27,12 @@ export class EchoRing {
             return;
         }
 
-        const alpha = Math.pow(1 - t, 1.2) * 0.78 * this.strength;
+        const alpha = Math.pow(1 - t, 1.2) * 0.5 * this.strength;
         this.gfx.clear();
         if (alpha < 0.01) return;
 
-        const ringWidth = 40 + 24 * this.strength;
-        const numLayers = 7;
-        const strokeW   = (ringWidth / numLayers) * 1.8;
-
-        for (let i = 0; i < numLayers; i++) {
-            const u      = i / (numLayers - 1);
-            const offset = (u - 0.5) * ringWidth;
-            const r      = this.currentRadius + offset;
-            if (r < 0) continue;
-
-            const gauss      = Math.exp(-Math.pow((u - 0.5) * 3.8, 2));
-            const layerAlpha = alpha * gauss * 0.62;
-
-            this.gfx.lineStyle(strokeW, 0xffbb44, layerAlpha);
-            this.gfx.strokeCircle(this.x, this.y, r);
-        }
+        this.gfx.lineStyle((10 + 24 * this.strength) * 1.8, 0xffbb44, alpha * 0.62);
+        this.gfx.strokeCircle(this.x, this.y, this.currentRadius);
     }
 
     destroy() {
