@@ -679,8 +679,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     handleAsteroidCollisions() {
-        const splitCandidates = new Set();
-
         for (let i = 0; i < this.asteroids.length; i++) {
             const a = this.asteroids[i];
             if (a.isDead) continue;
@@ -725,50 +723,8 @@ export class GameScene extends Phaser.Scene {
                     a.body.velocity.y += impulse * b.mass * ny;
                     b.body.velocity.x -= impulse * a.mass * nx;
                     b.body.velocity.y -= impulse * a.mass * ny;
-
-                    const impactSpeed = Math.abs(relativeAlongNormal);
-                    const larger = a.radius >= b.radius ? a : b;
-                    if (impactSpeed > 58 &&
-                        larger.radius > 34 &&
-                        larger.collisionCooldown <= 0 &&
-                        this.asteroids.length < 36 &&
-                        Math.random() < 0.18) {
-                        splitCandidates.add(larger);
-                    }
                 }
             }
-        }
-
-        for (const asteroid of splitCandidates) {
-            if (!asteroid.isDead) this.splitAsteroid(asteroid);
-        }
-    }
-
-    splitAsteroid(asteroid) {
-        const pieces = asteroid.radius > 52 ? 3 : 2;
-        const childRadius = Math.max(12, Math.round(asteroid.radius * Phaser.Math.FloatBetween(0.46, 0.58)));
-        const baseVX = asteroid.body.velocity.x;
-        const baseVY = asteroid.body.velocity.y;
-        const baseAngle = Math.atan2(baseVY, baseVX) || Math.random() * Math.PI * 2;
-        const x = asteroid.x;
-        const y = asteroid.y;
-
-        asteroid.die();
-
-        for (let i = 0; i < pieces; i++) {
-            const angle = baseAngle + ((i / pieces) * Math.PI * 2) + Phaser.Math.FloatBetween(-0.5, 0.5);
-            const child = this.addAsteroid(
-                x + Math.cos(angle) * childRadius,
-                y + Math.sin(angle) * childRadius,
-                childRadius
-            );
-            const speed = Phaser.Math.FloatBetween(55, 105);
-            child.body.setVelocity(
-                baseVX * 0.45 + Math.cos(angle) * speed,
-                baseVY * 0.45 + Math.sin(angle) * speed
-            );
-            child.collisionCooldown = 0.8;
-            child.reveal(0.95);
         }
     }
 
@@ -947,84 +903,60 @@ export class GameScene extends Phaser.Scene {
         this.awardKill(x, y, false, enemy, { collision: true, skipBurst: true });
     }
 
-    createMeteoroidPop(x, y) {
-        const gfx = this.add.graphics().setDepth(5);
+    createEffectTween(depth, duration, draw, ease = 'Cubic.easeOut') {
+        const gfx = this.add.graphics().setDepth(depth);
         this.tweens.addCounter({
             from: 0,
             to: 1,
-            duration: 180,
-            ease: 'Cubic.easeOut',
+            duration,
+            ease,
             onUpdate: tween => {
                 const t = tween.getValue();
                 gfx.clear();
-                gfx.lineStyle(1.5, 0x9aa3aa, (1 - t) * 0.78);
-                gfx.strokeCircle(x, y, 5 + 18 * t);
-                gfx.fillStyle(0x9aa3aa, (1 - t) * 0.16);
-                gfx.fillCircle(x, y, 12 * t);
+                draw(gfx, t);
             },
             onComplete: () => gfx.destroy()
+        });
+    }
+
+    createMeteoroidPop(x, y) {
+        this.createEffectTween(5, 180, (gfx, t) => {
+            gfx.lineStyle(1.5, 0x9aa3aa, (1 - t) * 0.78);
+            gfx.strokeCircle(x, y, 5 + 18 * t);
+            gfx.fillStyle(0x9aa3aa, (1 - t) * 0.16);
+            gfx.fillCircle(x, y, 12 * t);
         });
     }
 
     createAsteroidBump(x, y, nx, ny) {
-        const gfx = this.add.graphics().setDepth(5);
-        this.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration: 160,
-            ease: 'Cubic.easeOut',
-            onUpdate: tween => {
-                const t = tween.getValue();
-                gfx.clear();
-                gfx.lineStyle(1.2, 0x9aa3aa, (1 - t) * 0.58);
-                gfx.lineBetween(x, y, x + nx * (8 + 18 * t), y + ny * (8 + 18 * t));
-                gfx.strokeCircle(x, y, 4 + 10 * t);
-            },
-            onComplete: () => gfx.destroy()
+        this.createEffectTween(5, 160, (gfx, t) => {
+            gfx.lineStyle(1.2, 0x9aa3aa, (1 - t) * 0.58);
+            gfx.lineBetween(x, y, x + nx * (8 + 18 * t), y + ny * (8 + 18 * t));
+            gfx.strokeCircle(x, y, 4 + 10 * t);
         });
     }
 
     createEnemyCollisionExplosion(x, y, scale = 1) {
-        const gfx = this.add.graphics().setDepth(7);
-        this.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration: 260 + 110 * scale,
-            ease: 'Cubic.easeOut',
-            onUpdate: tween => {
-                const t = tween.getValue();
-                gfx.clear();
-                gfx.lineStyle(2.2, 0x4dff88, (1 - t) * 0.82);
-                gfx.strokeCircle(x, y, (16 + 44 * t) * scale);
-                gfx.lineStyle(1.4, 0xff6655, (1 - t) * 0.56);
-                gfx.strokeCircle(x, y, (8 + 30 * t) * scale);
-                if (scale > 1.35) {
-                    gfx.lineStyle(1, 0xffdd88, (1 - t) * 0.5);
-                    gfx.strokeCircle(x, y, (5 + 68 * t) * scale);
-                }
-            },
-            onComplete: () => gfx.destroy()
+        this.createEffectTween(7, 260 + 110 * scale, (gfx, t) => {
+            gfx.lineStyle(2.2, 0x4dff88, (1 - t) * 0.82);
+            gfx.strokeCircle(x, y, (16 + 44 * t) * scale);
+            gfx.lineStyle(1.4, 0xff6655, (1 - t) * 0.56);
+            gfx.strokeCircle(x, y, (8 + 30 * t) * scale);
+            if (scale > 1.35) {
+                gfx.lineStyle(1, 0xffdd88, (1 - t) * 0.5);
+                gfx.strokeCircle(x, y, (5 + 68 * t) * scale);
+            }
         });
     }
 
     createEnemyMuzzleFlash(x, y, angle) {
-        const gfx = this.add.graphics().setDepth(7);
         const nx = Math.cos(angle);
         const ny = Math.sin(angle);
-        this.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration: 120,
-            ease: 'Cubic.easeOut',
-            onUpdate: tween => {
-                const t = tween.getValue();
-                gfx.clear();
-                gfx.lineStyle(1.5, 0xff6655, (1 - t) * 0.75);
-                gfx.lineBetween(x, y, x + nx * (18 + 22 * t), y + ny * (18 + 22 * t));
-                gfx.fillStyle(0xff9944, (1 - t) * 0.24);
-                gfx.fillCircle(x + nx * 10, y + ny * 10, 8 + 8 * t);
-            },
-            onComplete: () => gfx.destroy()
+        this.createEffectTween(7, 120, (gfx, t) => {
+            gfx.lineStyle(1.5, 0xff6655, (1 - t) * 0.75);
+            gfx.lineBetween(x, y, x + nx * (18 + 22 * t), y + ny * (18 + 22 * t));
+            gfx.fillStyle(0xff9944, (1 - t) * 0.24);
+            gfx.fillCircle(x + nx * 10, y + ny * 10, 8 + 8 * t);
         });
     }
 

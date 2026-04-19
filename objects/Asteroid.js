@@ -1,6 +1,6 @@
 // Asteroid
 // Moving scanner clutter: always visible grey rocks.
-// Asteroids drift, rotate, bounce off each other, and larger ones can split.
+// Asteroids drift, rotate, and bounce off each other.
 
 export class Asteroid extends Phaser.GameObjects.Container {
     constructor(scene, x, y, radius) {
@@ -12,7 +12,6 @@ export class Asteroid extends Phaser.GameObjects.Container {
         this.isMeteoroid = radius <= 8;
         this.rotationRate = Phaser.Math.FloatBetween(-0.85, 0.85) * (42 / Math.max(12, radius));
         this.mass = radius * radius;
-        this.collisionCooldown = 0;
         this.isDead = false;
 
         this.body.setCircle(radius, -radius, -radius);
@@ -80,6 +79,5 @@ export class Asteroid extends Phaser.GameObjects.Container {
     update(delta) {
         const dt = delta / 1000;
         this.rotation += this.rotationRate * dt;
-        this.collisionCooldown = Math.max(0, this.collisionCooldown - dt);
     }
 }
