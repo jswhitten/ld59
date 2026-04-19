@@ -32,14 +32,7 @@ export class AudioSystem {
         this.engineNoise = null;
         this.engineNoiseGain = null;
         this.engineNoiseFilter = null;
-        this.bassGain = null;
-        this.bassBeatOsc = null;
-        this.midGain = null;
-        this.midFilter = null;
-        this.midBeatOsc = null;
-        this.upperGain = null;
-        this.upperFilt = null;
-        this.upperBeatOsc = null;
+        this.ambientVoices = [];
         this.enemyVoices = [];
         this.voiceContactTimer = 0;
         this.lowShieldTimer = 0;
@@ -387,7 +380,7 @@ export class AudioSystem {
     }
 
     // -------------------------------------------------------------------------
-    // Ambient music — procedural drone + reverb + sparse sparkle tones
+    // Ambient music — compact procedural drone + reverb
     // -------------------------------------------------------------------------
 
     createReverb(duration = 2.6, decay = 2.4) {
@@ -406,23 +399,18 @@ export class AudioSystem {
     }
 
     createAmbient() {
-        // Ambient reverb stays on the music path so it can continue after game over.
         this.sharedReverb  = this.createReverb();
         this.reverbInput   = this.ctx.createGain();
         this.reverbInput.gain.value = 1.0;
         const reverbReturn = this.ctx.createGain();
         reverbReturn.gain.value = 0.88;
-        // Ambient routes to its own output node that bypasses master and the analyser.
-        // Drones stay audible as atmosphere but never appear on the spectrum display.
         this.ambientOut = this.ctx.createGain();
         this.ambientOut.gain.value = 3.0;
         this.ambientOut.connect(this.ctx.destination);
-
         this.reverbInput.connect(this.sharedReverb);
         this.sharedReverb.connect(reverbReturn);
         reverbReturn.connect(this.ambientOut);
 
-        // ambientBus — fades in on first audio context resume.
         this.ambientBus = this.ctx.createGain();
         this.ambientBus.gain.value = 0;
         this.ambientBus.connect(this.reverbInput);
@@ -440,120 +428,52 @@ export class AudioSystem {
         fxReverb.connect(fxReverbReturn);
         fxReverbReturn.connect(this.fxBus);
 
-        // Bass drone — detuned pair with slow breathing LFO, kept subtle so it
-        // supports the bed without becoming a single obvious tone.
-        const bass    = this.ctx.createOscillator();
-        const bassBeat = this.ctx.createOscillator();
-        const bassGain = this.ctx.createGain();
-        const bassLfo  = this.ctx.createOscillator();
-        const bassLfoAmt = this.ctx.createGain();
-        bass.type = 'sine';
-        bass.frequency.value = 38;
-        bassBeat.type = 'triangle';
-        bassBeat.frequency.value = 38.42;
-        bassGain.gain.value = 0.32;
-        bassLfo.type = 'sine';
-        bassLfo.frequency.value = 0.073; // ~13.7 s cycle
-        bassLfoAmt.gain.value = 0.16;
-        bass.connect(bassGain);
-        bassBeat.connect(bassGain);
-        bassGain.connect(this.ambientBus);
-        bassLfo.connect(bassLfoAmt);
-        bassLfoAmt.connect(bassGain.gain);
-        bass.start();
-        bassBeat.start();
-        bassLfo.start();
-        this.bassOsc = bass;
-        this.bassBeatOsc = bassBeat;
-        this.bassGain = bassGain;
+        this.ambientVoices = [
+            { freq: 36.7, detune: 0.42, type: 'sine', gain: 0.28 },
+            { freq: 55.0, detune: 0.75, type: 'triangle', gain: 0.18 },
+            { freq: 110.2, detune: 1.1, type: 'sine', gain: 0.08 },
+        ].map(v => {
+            const osc = this.ctx.createOscillator();
+            const beat = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = v.type;
+            beat.type = v.type === 'sine' ? 'triangle' : 'sine';
+            osc.frequency.value = v.freq;
+            beat.frequency.value = v.freq + v.detune;
+            gain.gain.value = v.gain;
+            osc.connect(gain);
+            beat.connect(gain);
+            gain.connect(this.ambientBus);
+            osc.start();
+            beat.start();
+            return { ...v, osc, beat, gain };
+        });
 
-        // Mid drone — detuned triangles, filter swept by a slow LFO.
-        const mid       = this.ctx.createOscillator();
-        const midBeat   = this.ctx.createOscillator();
-        const midGain   = this.ctx.createGain();
-        const midFilter = this.ctx.createBiquadFilter();
-        const midLfo    = this.ctx.createOscillator();
-        const midLfoAmt = this.ctx.createGain();
-        mid.type = 'triangle';
-        mid.frequency.value = 62;
-        midBeat.type = 'sine';
-        midBeat.frequency.value = 62.8;
-        midGain.gain.value = 0.24;
-        midFilter.type = 'lowpass';
-        midFilter.frequency.value = 260;
-        midFilter.Q.value = 0.8;
-        midLfo.type = 'sine';
-        midLfo.frequency.value = 0.038; // ~26 s cycle
-        midLfoAmt.gain.value = 130;     // sweeps filter ±130 Hz
-        mid.connect(midFilter);
-        midBeat.connect(midFilter);
-        midFilter.connect(midGain);
-        midGain.connect(this.ambientBus);
-        midLfo.connect(midLfoAmt);
-        midLfoAmt.connect(midFilter.frequency);
-        mid.start();
-        midBeat.start();
-        midLfo.start();
-        this.midOsc = mid;
-        this.midBeatOsc = midBeat;
-        this.midGain = midGain;
-        this.midFilter = midFilter;
+        const noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+        const noiseData = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        const noiseFilter = this.ctx.createBiquadFilter();
+        const noiseGain = this.ctx.createGain();
+        noise.buffer = noiseBuffer;
+        noise.loop = true;
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.value = 360;
+        noiseGain.gain.value = 0.014;
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(this.ambientBus);
+        noise.start();
 
-        // Upper harmonic — paired partials for slow beating and motion.
-        const upper     = this.ctx.createOscillator();
-        const upperBeat = this.ctx.createOscillator();
-        const upperGain = this.ctx.createGain();
-        const upperFilt = this.ctx.createBiquadFilter();
-        upper.type = 'sine';
-        upper.frequency.value = 114.3;
-        upperBeat.type = 'triangle';
-        upperBeat.frequency.value = 115.1;
-        upperGain.gain.value = 0.11;
-        upperFilt.type = 'lowpass';
-        upperFilt.frequency.value = 340;
-        upper.connect(upperFilt);
-        upperBeat.connect(upperFilt);
-        upperFilt.connect(upperGain);
-        upperGain.connect(this.ambientBus);
-        upper.start();
-        upperBeat.start();
-        this.upperOsc = upper;
-        this.upperBeatOsc = upperBeat;
-        this.upperGain = upperGain;
-        this.upperFilt = upperFilt;
-
-        const bedBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 2, this.ctx.sampleRate);
-        const bedData = bedBuffer.getChannelData(0);
-        for (let i = 0; i < bedData.length; i++) bedData[i] = Math.random() * 2 - 1;
-        const bedNoise = this.ctx.createBufferSource();
-        const bedFilter = this.ctx.createBiquadFilter();
-        const bedGain = this.ctx.createGain();
-        bedNoise.buffer = bedBuffer;
-        bedNoise.loop = true;
-        bedFilter.type = 'lowpass';
-        bedFilter.frequency.value = 420;
-        bedFilter.Q.value = 0.35;
-        bedGain.gain.value = 0.018;
-        bedNoise.connect(bedFilter);
-        bedFilter.connect(bedGain);
-        bedGain.connect(this.ambientBus);
-        bedNoise.start();
-        this.ambientNoise = bedNoise;
-
-        // Pitch table — D Aeolian harmony. Each set: bass, mid (perfect 5th up), upper (~2 octaves).
-        // The drones glide slowly between these to prevent monotony.
         this.dronePitches = [
-            { bass: 36.7, mid: 55.0, upper: 110.2 },   // D — A — A
-            { bass: 43.7, mid: 65.4, upper: 131.2 },   // F — C — C
-            { bass: 49.0, mid: 73.4, upper: 110.2 },   // G — D — A
-            { bass: 41.2, mid: 55.0, upper: 123.5 },   // E — A — B
-            { bass: 55.0, mid: 82.4, upper: 110.0 },   // A — E — A
-            { bass: 32.7, mid: 49.0, upper:  98.0 },   // C — G — G  (darker landing)
+            [36.7, 55.0, 110.2],
+            [43.7, 65.4, 131.2],
+            [49.0, 73.4, 110.2],
+            [41.2, 55.0, 123.5],
+            [32.7, 49.0,  98.0],
         ];
         this.currentDroneIdx  = 0;
         this.droneChangeTimer = 12 + Math.random() * 10;
-
-        this.ambientSparkTimer = 5 + Math.random() * 8;
         this.ambientReady = false;
 
         this.createAdaptiveLayers();
@@ -632,20 +552,14 @@ export class AudioSystem {
         this.ambientBus.gain.cancelScheduledValues(now);
         this.ambientBus.gain.setTargetAtTime(0.46, now, 3.2);
 
-        this.bassGain?.gain.setTargetAtTime(0.16, now, 2.4);
-        this.midGain?.gain.setTargetAtTime(0.08, now, 2.6);
-        this.upperGain?.gain.setTargetAtTime(0.045, now, 2.8);
-        this.midFilter?.frequency.setTargetAtTime(120, now, 2.4);
-        this.upperFilt?.frequency.setTargetAtTime(190, now, 2.4);
-
-        this.bassOsc?.frequency.linearRampToValueAtTime(27.5, now + 4.5);
-        this.bassBeatOsc?.frequency.linearRampToValueAtTime(27.92, now + 4.5);
-        this.midOsc?.frequency.linearRampToValueAtTime(41.2, now + 4.8);
-        this.midBeatOsc?.frequency.linearRampToValueAtTime(42.04, now + 4.8);
-        this.upperOsc?.frequency.linearRampToValueAtTime(82.4, now + 5.0);
-        this.upperBeatOsc?.frequency.linearRampToValueAtTime(83.3, now + 5.0);
+        [27.5, 41.2, 82.4].forEach((freq, i) => {
+            const voice = this.ambientVoices[i];
+            if (!voice) return;
+            voice.gain.gain.setTargetAtTime(voice.gain.gain.value * 0.5, now, 2.6);
+            voice.osc.frequency.linearRampToValueAtTime(freq, now + 4.8);
+            voice.beat.frequency.linearRampToValueAtTime(freq + voice.detune, now + 5.0);
+        });
         this.droneChangeTimer = 9999;
-        this.ambientSparkTimer = 9999;
 
         this.attackDrumGain?.gain.setTargetAtTime(0, now, 0.6);
         this.attackBeatTime = null;
@@ -653,58 +567,19 @@ export class AudioSystem {
     }
 
     updateDronePitches(now) {
-        if (!this.bassOsc || !this.midOsc || !this.upperOsc) return;
-
+        if (!this.ambientVoices.length) return;
         const prev = this.currentDroneIdx;
         do {
             this.currentDroneIdx = Math.floor(Math.random() * this.dronePitches.length);
         } while (this.currentDroneIdx === prev && this.dronePitches.length > 1);
 
-        const p    = this.dronePitches[this.currentDroneIdx];
+        const chord = this.dronePitches[this.currentDroneIdx];
         const ramp = 5 + Math.random() * 6; // 5–11 second frequency glide
-
-        this.bassOsc.frequency.linearRampToValueAtTime(p.bass,        now + ramp);
-        this.bassBeatOsc?.frequency.linearRampToValueAtTime(p.bass + 0.42, now + ramp * 1.04);
-        this.midOsc.frequency.linearRampToValueAtTime(p.mid,          now + ramp);
-        this.midBeatOsc?.frequency.linearRampToValueAtTime(p.mid + 0.8, now + ramp * 0.96);
-        this.upperOsc.frequency.linearRampToValueAtTime(p.upper + 0.3, now + ramp);
-        this.upperBeatOsc?.frequency.linearRampToValueAtTime(p.upper + 1.1, now + ramp * 1.02);
-    }
-
-    playAmbientSpark() {
-        if (!this.enabled || !this.ctx || !this.ambientBus) return;
-        const freqPool = [182, 243, 324, 432, 576, 768, 1024, 1368];
-        const freq     = freqPool[Math.floor(Math.random() * freqPool.length)];
-        const pan      = (Math.random() * 2 - 1) * 0.75;
-        const duration = 3.5 + Math.random() * 4;
-        const peakGain = 0.10 + Math.random() * 0.10;
-        const fadeIn   = 1.0 + Math.random() * 1.5;
-        const now = this.ctx.currentTime;
-
-        const osc    = this.ctx.createOscillator();
-        const amp    = this.ctx.createGain();
-        const filt   = this.ctx.createBiquadFilter();
-        const panner = this.ctx.createStereoPanner();
-
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        filt.type = 'lowpass';
-        filt.frequency.value = freq * 2.4;
-        panner.pan.value = pan;
-
-        amp.gain.setValueAtTime(0.0001, now);
-        amp.gain.linearRampToValueAtTime(peakGain, now + fadeIn);
-        amp.gain.linearRampToValueAtTime(peakGain * 0.35, now + duration * 0.62);
-        amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-        osc.connect(filt);
-        filt.connect(panner);
-        panner.connect(amp);
-        amp.connect(this.ambientBus); // gets reverb
-
-        osc.start(now);
-        osc.stop(now + duration + 0.12);
-        osc.onended = () => { osc.disconnect(); filt.disconnect(); panner.disconnect(); amp.disconnect(); };
+        this.ambientVoices.forEach((voice, i) => {
+            const freq = chord[i] ?? voice.freq;
+            voice.osc.frequency.linearRampToValueAtTime(freq, now + ramp);
+            voice.beat.frequency.linearRampToValueAtTime(freq + voice.detune, now + ramp * 1.03);
+        });
     }
 
     updateAmbient(dt) {
@@ -721,12 +596,6 @@ export class AudioSystem {
         if (this.droneChangeTimer <= 0) {
             this.droneChangeTimer = 12 + Math.random() * 16;
             this.updateDronePitches(this.ctx.currentTime);
-        }
-
-        this.ambientSparkTimer -= dt;
-        if (this.ambientSparkTimer <= 0) {
-            this.ambientSparkTimer = 7 + Math.random() * 15;
-            this.playAmbientSpark();
         }
     }
 
