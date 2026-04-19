@@ -1,4 +1,4 @@
-// Projectile — player shot
+// Projectile - player shot
 // Travels in a straight line in the ship's facing direction.
 // Acts as a mobile mini-pulse: reveals enemies within a small halo radius
 // as it passes. Missed shots still give information about where enemies aren't.
@@ -29,7 +29,7 @@ export class Projectile extends Phaser.GameObjects.Container {
     createVisual() {
         const g = this.scene.add.graphics();
 
-        // Projectile core — blue-white to distinguish player fire from hostile red shots.
+        // Projectile core - blue-white to distinguish player fire from hostile red shots.
         g.fillStyle(0x88d8ff, 0.95);
         g.fillCircle(0, 0, 2.8);
         g.fillStyle(0xffffff, 0.9);
@@ -48,7 +48,7 @@ export class Projectile extends Phaser.GameObjects.Container {
             return;
         }
 
-        // Reveal enemies inside the halo — the projectile as a traveling pulse
+        // Reveal enemies inside the halo - the projectile as a traveling pulse
         const worldSize = this.scene.worldSize;
         for (const enemy of enemies) {
             if (enemy.isDead) continue;

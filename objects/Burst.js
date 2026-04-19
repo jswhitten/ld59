@@ -1,4 +1,4 @@
-// Burst — timing contact that pauses, then commits to a fast straight dash.
+// Burst - timing contact that pauses, then commits to a fast straight dash.
 // Its danger is rhythm: scan to catch the pause, then dodge the dash vector.
 
 import { Enemy } from './Enemy.js';

@@ -1,4 +1,4 @@
-// EnemyProjectile — hostile shot.
+// EnemyProjectile - hostile shot.
 // Visually and mechanically distinct from the player's scanner-revealing projectile.
 
 export class EnemyProjectile extends Phaser.GameObjects.Container {

@@ -1,12 +1,12 @@
-// Enemy — base class
+// Enemy - base class
 // Handles the reveal/fade lifecycle, alert state, and shared physics setup.
 // Subclasses implement createVisual() and updateMovement().
 //
-// Reveal: pulse sweeps through the enemy → visible for revealDuration seconds.
-//   revealBrightness (0.5–1.0) scales peak alpha — weak pulses give ghostly glimpses.
+// Reveal: pulse makes the enemy visible for revealDuration seconds.
+//   revealBrightness (0.5–1.0) scales peak alpha - weak pulses give ghostly glimpses.
 //
-// Alert: pulse within alertRadius → enemy knows the player's last position.
-//   Alert is independent of reveal — enemies can approach or attack while invisible.
+// Alert: pulse within alertRadius alerts the enemy to the player's last position.
+//   Alert is independent of reveal - enemies can approach or attack while invisible.
 
 import { wrappedDelta } from '../utils/mathUtils.js';
 
@@ -56,7 +56,7 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.maxSpeed = 190;
 
         this.body.setCircle(this.radius, -this.radius, -this.radius);
-        // No world-bounds collision — GameScene wraps entities via physics.world.wrap().
+        // No world-bounds collision - GameScene wraps entities via physics.world.wrap().
 
         this.setDepth(2);
         this.createVisual();
@@ -126,7 +126,7 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.updateCloak(dt);
 
         // Alpha: fully visible until the last 0.8 s, then fade to transparent.
-        // revealBrightness scales the peak — weak pulses give a dimmer glimpse.
+        // revealBrightness scales the peak - weak pulses give a dimmer glimpse.
         let revealAlpha = 0;
         if (this.revealTimer > 0) {
             this.revealTimer -= dt;

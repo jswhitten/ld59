@@ -1,6 +1,5 @@
-// GameScene — core gameplay
+// GameScene - core gameplay
 // Owns the world, player, enemies, projectiles, and pulses.
-// Input: movement → Player; pulse charging + fire → here via EnergySystem.
 
 import { Player }       from '../objects/Player.js';
 import { Pulse }        from '../objects/Pulse.js';
@@ -23,7 +22,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // UIScene is launched once and never restarted — it reads game state via scene.get('GameScene').
+        // UIScene is launched once and never restarted - it reads game state via scene.get('GameScene').
         if (!this.scene.isActive('UIScene')) this.scene.launch('UIScene');
 
         this.worldSize = 5000;
@@ -32,7 +31,7 @@ export class GameScene extends Phaser.Scene {
 
         this.createStarField();
 
-        // Energy system — created before player so UIScene can read it immediately.
+        // Energy system - created before player so UIScene can read it immediately.
         this.energy = new EnergySystem();
         this.audioSystem = new AudioSystem(this);
         this.events.once('shutdown', () => this.audioSystem?.destroy());
@@ -44,7 +43,7 @@ export class GameScene extends Phaser.Scene {
         // Camera is manually centered each frame. Smooth follow lerps across the
         // numeric wrap seam, which makes the player visibly jump at world edges.
         this.cameras.main.setBackgroundColor('#020610');
-        // WebGL only — Canvas renderer (Safari iOS, some Chromebooks) silently ignores postFX.
+        // WebGL only - Canvas renderer (Safari iOS, some Chromebooks) silently ignores postFX.
         this.cameras.main.postFX.addBloom(0xffffff, 0, 0, 1, 0.6, 4);
         this.centerCameraOnPlayer();
 
@@ -83,7 +82,7 @@ export class GameScene extends Phaser.Scene {
         this.damageParticleGfx = this.add.graphics().setDepth(9);
         this.damageParticleTimer = 0;
 
-        // Short cooldowns — rate limiters, not the primary energy limiter.
+        // Short cooldowns - rate limiters, not the primary energy limiter.
         this.shotCooldown  = 0;
         this.pulseCooldown = 0; // 0.15 s key-bounce guard after firing
 
@@ -117,7 +116,7 @@ export class GameScene extends Phaser.Scene {
         this.spawnInitialEnemies();
     }
 
-    // Explicit contract for UIScene — reading any property here will give a clear error on rename.
+    // Explicit contract for UIScene - reading any property here will give a clear error on rename.
     getUIState() {
         return {
             score:          this.score,

@@ -1,10 +1,10 @@
-// UIScene — HUD overlay, runs in parallel with GameScene.
+// UIScene - HUD overlay, runs in parallel with GameScene.
 // Reads game state via GameScene.getUIState() each frame and renders it.
 //
 // Layout:
-//   Top-left  — title + compact control hints
-//   Top-right — score + run state
-//   Bottom panels (shared label row, left → right):
+//   Top-left  - title + compact control hints
+//   Top-right - score + run state
+//   Bottom panels (shared label row, left to right):
 //     SHIP SYSTEMS  |  LONG RANGE SCANNER  |  SENSOR ANALYSIS
 
 import { wrappedDelta } from '../utils/mathUtils.js';
@@ -24,7 +24,7 @@ const PANEL_LABEL = {
     color: '#7fffdf'
 };
 
-// EM frequency/label per enemy type — keyed by enemy.constructor.type
+// EM frequency/label per enemy type - keyed by enemy.constructor.type
 const ENEMY_EM = {
     drifter: { freq: 108, label: 'DRIFTER' },
     seeker:  { freq: 175, label: 'SEEKER'  },
@@ -65,7 +65,7 @@ export class UIScene extends Phaser.Scene {
         this.add.text(20, 64, 'SHIFT  FIRE', hintStyle).setAlpha(0.76);
         this.add.text(20, 80, 'SPACE  HOLD CHARGE / RELEASE PULSE', hintStyle).setAlpha(0.76);
 
-        // Score — top-right
+        // Score - top-right
         this.add.text(W - 20, 18, 'SCORE', microStyle).setOrigin(1, 0).setAlpha(0.72);
         this.scoreText = this.add.text(W - 20, 32, '0', titleStyle).setOrigin(1, 0).setAlpha(0.9);
         this.runText = this.add.text(W - 20, 58, 'x1  00:00', microStyle).setOrigin(1, 0).setAlpha(0.8);
@@ -94,7 +94,7 @@ export class UIScene extends Phaser.Scene {
         this.add.text(this.instrumentX, this.instrumentY + 76, 'ENERGY',         microStyle).setAlpha(0.82);
         this.add.text(this.instrumentX, this.instrumentY + 104, 'SCANNER CHARGE', microStyle).setAlpha(0.82);
 
-        // Live graphics — redrawn each frame in update()
+        // Live graphics - redrawn each frame in update()
         this.energyBarGfx = this.add.graphics();
         this.capBarGfx    = this.add.graphics();
 
@@ -133,13 +133,13 @@ export class UIScene extends Phaser.Scene {
             .setAlpha(0)
             .setDepth(1200);
 
-        // Sensor analysis — bottom-right (createSpectrumDisplay reads this.instrumentY)
+        // Sensor analysis - bottom-right (createSpectrumDisplay reads this.instrumentY)
         this.createSpectrumDisplay(W, H);
 
-        // Radar — bottom-center (createRadar reads this.instrumentY)
+        // Radar - bottom-center (createRadar reads this.instrumentY)
         this.createRadar(W, H);
 
-        // Debug overlay — F1 to toggle
+        // Debug overlay - F1 to toggle
         this.debugMode = false;
         this.debugGfx  = this.add.graphics().setDepth(900);
         this.debugLabels = [];
@@ -355,7 +355,7 @@ export class UIScene extends Phaser.Scene {
         this.gainSliderX = this.spectrumX + 18;
         this.isDraggingGain = false;
 
-        // Panel label aligned to shared label row — sits above the panel background
+        // Panel label aligned to shared label row - sits above the panel background
         this.add.text(this.spectrumX, this.instrumentY, 'SENSOR ANALYSIS', PANEL_LABEL).setAlpha(0.78);
         this.add.text(this.gainSliderX, this.gainSliderTop - 13, 'GAIN', {
             fontFamily: 'Share Tech Mono, monospace',
@@ -363,7 +363,7 @@ export class UIScene extends Phaser.Scene {
             color: '#7fffdf'
         }).setOrigin(0.5, 0).setDepth(101).setAlpha(0.64);
 
-        // Frequency axis labels — fixed positions on the log scale (30–3800 Hz shown as MHz/GHz)
+        // Frequency axis labels - fixed positions on the log scale (30–3800 Hz shown as MHz/GHz)
         const { graphX, graphW } = this.getSpectrumGraphMetrics();
         const fMin = 30, fMax = 3800;
         const logMin   = Math.log(fMin);
@@ -386,7 +386,7 @@ export class UIScene extends Phaser.Scene {
             this.freqAxisLabels.push(t);
         }
 
-        // Peak marker labels — repositioned each frame to track strongest EM peaks
+        // Peak marker labels - repositioned each frame to track strongest EM peaks
         const peakTextStyle = {
             fontFamily: 'Share Tech Mono, monospace',
             fontSize: '9px',
@@ -516,7 +516,7 @@ export class UIScene extends Phaser.Scene {
         );
         const echoBins = this.applySpectrumGain(
             this.sampleSpectrumBinsLog(state.audioSystem?.getEchoSpectrumData?.(), this.spectrumBins, sampleRate),
-            visualGain * 1.4   // slight boost — echo pings are quieter than EM voices
+            visualGain * 1.4   // slight boost - echo pings are quieter than EM voices
         );
         const comms = state.comms;
         const commsActive = comms && comms.age < comms.signalLifetime;
@@ -536,7 +536,7 @@ export class UIScene extends Phaser.Scene {
             if (this.commsWaterfall.length > this.waterfallRows) this.commsWaterfall.pop();
         }
 
-        // Background — no border
+        // Background - no border
         g.fillStyle(0x000810, 0.86);
         g.fillRect(x, y, w, h);
         this.drawGainSlider(g, sensorGain);
@@ -555,7 +555,7 @@ export class UIScene extends Phaser.Scene {
             g.lineBetween(gx, barTop, gx, waterfallTop + waterfallH);
         }
 
-        // Layer 1 — blue-grey: all signals (engine, weapons, enemies)
+        // Layer 1 - blue-grey: all signals (engine, weapons, enemies)
         for (let i = 0; i < totalBins.length; i++) {
             const bar = Math.pow(totalBins[i], 0.72);
             if (bar < 0.01) continue;
@@ -563,7 +563,7 @@ export class UIScene extends Phaser.Scene {
             g.fillRect(graphX + i * binW + 1, barTop + barH * (1 - bar), Math.max(1, binW - 2), barH * bar);
         }
 
-        // Layer 2 — green/red: EM-only enemy contacts
+        // Layer 2 - green/red: EM-only enemy contacts
         for (let i = 0; i < emBins.length; i++) {
             const v   = emBins[i];
             const bar = Math.pow(v, 0.72);
@@ -573,7 +573,7 @@ export class UIScene extends Phaser.Scene {
             g.fillRect(graphX + i * binW + 1, barTop + barH * (1 - bar), Math.max(1, binW - 2), barH * bar);
         }
 
-        // Layer 3 — amber: pulse echo return pings
+        // Layer 3 - amber: pulse echo return pings
         for (let i = 0; i < echoBins.length; i++) {
             const bar = Math.pow(echoBins[i], 0.68);
             if (bar < 0.01) continue;
@@ -581,7 +581,7 @@ export class UIScene extends Phaser.Scene {
             g.fillRect(graphX + i * binW + 1, barTop + barH * (1 - bar), Math.max(1, binW - 2), barH * bar);
         }
 
-        // Waterfall — EM contacts (green/red) and echo returns (amber)
+        // Waterfall - EM contacts (green/red) and echo returns (amber)
         const rowH = waterfallH / this.waterfallRows;
         for (let row = 0; row < this.waterfall.length; row++) {
             const emRow   = this.waterfall[row];
@@ -614,7 +614,7 @@ export class UIScene extends Phaser.Scene {
             sensorGain
         });
 
-        // Peak frequency markers — find local EM maxima; labels pinned to fixed row with nudging
+        // Peak frequency markers - find local EM maxima; labels pinned to fixed row with nudging
         const fMin = 30, fMax = 3800;
         const logMin = Math.log(fMin);
         const logMax = Math.log(fMax);
@@ -792,7 +792,7 @@ export class UIScene extends Phaser.Scene {
         const debugSignals = [];
 
         // --- Engine drone ---
-        // Strength: idle gain ≈ 0.018, full thrust ≈ 0.093 — normalize to 0–1
+        // Strength: idle gain ≈ 0.018, full thrust ≈ 0.093 - normalize to 0–1
         const thrust    = Math.abs(state.player.thrustInput);
         const forward   = state.player.thrustInput > 0 ? 1 : 0;
         const engGain   = 0.018 + thrust * (forward ? 0.075 : 0.035);
@@ -806,7 +806,7 @@ export class UIScene extends Phaser.Scene {
         debugSignals.push({ label: 'ENGINE', strength: engStr, color: 0x5599bb, colorStr: '#5599bb' });
 
         // --- Charge tone ---
-        // Strength: 0.008 + capFrac * 0.018 — normalize to 0.008–0.026
+        // Strength: 0.008 + capFrac * 0.018 - normalize to 0.008–0.026
         const capFrac = state.energy?.capFraction ?? 0;
         if (capFrac > 0.01) {
             const chargeHz  = Math.round(82 + capFrac * 260);
@@ -830,7 +830,6 @@ export class UIScene extends Phaser.Scene {
             const proximity  = Math.max(0, 1 - dist / 1450);
             const closeBoost = Math.pow(proximity, 1.7);
             const voiceGain  = 0.01 + closeBoost * 0.18;
-            // Normalize: 0.01 (out of range) → 0, 0.19 (at player) → 1
             const voiceStr = Math.min(1, Math.max(0, (voiceGain - 0.01) / 0.18));
 
             const info = ENEMY_EM[enemy.constructor.type] ?? { freq: 108, label: 'ENEMY' };

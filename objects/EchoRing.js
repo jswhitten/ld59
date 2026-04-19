@@ -1,4 +1,4 @@
-// EchoRing — visible return echo from a contact hit by a pulse.
+// EchoRing - visible return echo from a contact hit by a pulse.
 // Spawns at the contact position and expands outward in warm amber,
 // distinguishing it from the outgoing cyan pulse ring.
 // strength (0-1) scales both brightness and max radius.
@@ -9,8 +9,8 @@ export class EchoRing {
         this.x        = x;
         this.y        = y;
         this.strength = strength;
-        this.maxRadius   = 120 + 280 * strength;   // 120–400 px — noticeably smaller than pulse (260–2160)
-        this.speed       = 420;                    // px/s — slow enough to watch arrive and fade
+        this.maxRadius   = 120 + 280 * strength;   // 120–400 px - noticeably smaller than pulse (260–2160)
+        this.speed       = 420;                    // px/s - slow enough to watch arrive and fade
         this.currentRadius = 4;
         this.done = false;
 

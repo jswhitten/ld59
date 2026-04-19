@@ -9,14 +9,14 @@ import { EchoRing } from './EchoRing.js';
 export class Pulse {
     constructor(scene, x, y, chargeLevel = 1) {
         this.scene = scene;
-        this.originX = x;   // player position at fire time — used as last-known-pos for alerts
+        this.originX = x;   // player position at fire time - used as last-known-pos for alerts
         this.originY = y;
         this.chargeLevel = chargeLevel;
 
         // All pulse properties scale continuously with charge.
-        this.maxRadius       = 260 + 1900 * chargeLevel;   // 260–2160 px
+        this.maxRadius       = 260 + 1900 * chargeLevel;   // 260-2160 px
         this.speed           = 850 + 550 * chargeLevel;    // 850–1400 px/s
-        this.alertRadius     = this.maxRadius * chargeLevel; // 0 at min → maxRadius at full
+        this.alertRadius     = this.maxRadius * chargeLevel; // 0 at min, maxRadius at full
         this.revealBrightness = 0.5 + 0.5 * chargeLevel;   // 0.5–1.0
 
         this.currentRadius = 10;
@@ -58,7 +58,7 @@ export class Pulse {
                         this.scene.comms?.push?.('multiContact', { count: this.pingedEnemies.size }, 2);
                     }
                 }
-                // Alert enemies within the alert radius — small pulses spare distant contacts.
+                // Alert enemies within the alert radius - small pulses spare distant contacts.
                 if (d <= this.alertRadius) {
                     enemy.alert(this.originX, this.originY);
                 }
@@ -73,9 +73,9 @@ export class Pulse {
                 const revealStrength = 0.72 + 0.2 * this.chargeLevel;
                 if (!this.pingedAsteroids.has(asteroid)) {
                     this.pingedAsteroids.add(asteroid);
-                    // Visual echo ring — slightly dimmer than enemy echoes (rock, not contact)
+                    // Visual echo ring - slightly dimmer than enemy echoes (rock, not contact)
                     this.scene.echoRings?.push(new EchoRing(this.scene, asteroid.x, asteroid.y, revealStrength * 0.6));
-                    // Audio echo — lower chargeLevel makes it shorter and lower-frequency than ship echoes
+                    // Audio echo - lower chargeLevel makes it shorter and lower-frequency than ship echoes
                     if (this.scene.audioSystem) {
                         const adx = wrappedDelta(this.originX, asteroid.x, worldSize);
                         const ady = wrappedDelta(this.originY, asteroid.y, worldSize);

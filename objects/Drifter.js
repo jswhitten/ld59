@@ -1,4 +1,4 @@
-// Drifter — slow, steady ranged attacker.
+// Drifter - slow, steady ranged attacker.
 // Passive: drifts at constant velocity in a random direction.
 // Alert: approaches, fires, then veers off instead of deliberately colliding.
 

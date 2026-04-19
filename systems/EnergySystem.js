@@ -15,10 +15,10 @@ export class EnergySystem {
     constructor() {
         this.max          = 100;
         this.current      = 100;
-        this.rechargeRate = 10;   // % of max per second — passive ambient recharge
+        this.rechargeRate = 10;   // % of max per second - passive ambient recharge
         // transferRate > rechargeRate so holding space depletes the main pool even while it's
-        // recharging — makes pulse charging feel like a real energy commitment.
-        this.transferRate = 20;   // % of max per second — pool → capacitor while charging
+        // recharging - makes pulse charging feel like a real energy commitment.
+        this.transferRate = 20;   // % of max per second
         this.shotCost     = 8;
         this.lowThreshold = 20;
 

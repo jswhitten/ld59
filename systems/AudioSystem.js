@@ -62,10 +62,7 @@ export class AudioSystem {
         this.emBus = this.ctx.createGain();
         this.emBus.gain.value = 1;
 
-        // Master analyser — captures weapons, engine, pulses.
-        // fftSize 2048 → 21.5 Hz/bin, so the engine (34–58 Hz) lands in bins 1–2
-        // instead of bin 0 (DC). Low smoothing (0.35) so brief SFX register within
-        // ~50ms; wide dB range (-65 to -10) so SFX transients aren't clipped.
+        // Master analyser - captures weapons, engine, pulses.
         this.analyser = this.ctx.createAnalyser();
         this.analyser.fftSize = 2048;
         this.analyser.smoothingTimeConstant = 0.35;
@@ -73,7 +70,7 @@ export class AudioSystem {
         this.analyser.maxDecibels = -10;
         this.spectrumData = new Uint8Array(this.analyser.frequencyBinCount);
 
-        // EM-only analyser — captures only the enemy voice bus.
+        // EM-only analyser - captures only the enemy voice bus.
         this.emAnalyser = this.ctx.createAnalyser();
         this.emAnalyser.fftSize = 2048;
         this.emAnalyser.smoothingTimeConstant = 0.72;
@@ -81,7 +78,7 @@ export class AudioSystem {
         this.emAnalyser.maxDecibels = -15;
         this.emSpectrumData = new Uint8Array(this.emAnalyser.frequencyBinCount);
 
-        // Echo-only analyser — captures pulse return pings so UIScene can draw them
+        // Echo-only analyser - captures pulse return pings so UIScene can draw them
         // in a fourth amber layer. Fast smoothing (0.20) so brief transients register clearly.
         this.echoBus = this.ctx.createGain();
         this.echoBus.gain.value = 1;
@@ -378,7 +375,7 @@ export class AudioSystem {
     }
 
     // -------------------------------------------------------------------------
-    // Ambient music — compact procedural drone + reverb
+    // Ambient music - compact procedural drone + reverb
     // -------------------------------------------------------------------------
 
     createReverb(duration = 2.6, decay = 2.4) {
@@ -478,14 +475,14 @@ export class AudioSystem {
     }
 
     createAdaptiveLayers() {
-        // Master gain for the drum pattern — fades in/out with attack state.
-        // Routes to ambientOut (bypasses analyser) — drums never appear on the spectrum display.
+        // Master gain for the drum pattern - fades in/out with attack state.
+        // Routes to ambientOut (bypasses analyser) - drums never appear on the spectrum display.
         this.attackDrumGain = this.ctx.createGain();
         this.attackDrumGain.gain.value = 0;
         this.attackDrumGain.connect(this.ambientOut);
         this.attackBeatTime = null;
 
-        // Critical heartbeat — two detuned sine oscillators, fades in when hull/shield is critical.
+        // Critical heartbeat - two detuned sine oscillators, fades in when hull/shield is critical.
         const heartA = this.ctx.createOscillator();
         const heartB = this.ctx.createOscillator();
         heartA.type = 'sine';
@@ -589,7 +586,7 @@ export class AudioSystem {
             this.ambientBus.gain.setTargetAtTime(1.0, this.ctx.currentTime + 0.5, 4.5);
         }
 
-        // Harmonic walk — drones glide to a new pitch set every 12–28 seconds.
+        // Harmonic walk - drones glide to a new pitch set every 12–28 seconds.
         this.droneChangeTimer -= dt;
         if (this.droneChangeTimer <= 0) {
             this.droneChangeTimer = 12 + Math.random() * 16;
@@ -598,13 +595,13 @@ export class AudioSystem {
     }
 
     // -------------------------------------------------------------------------
-    // Pulse echo — distance-delayed, stereo-panned return ping per contact
+    // Pulse echo - distance-delayed, stereo-panned return ping per contact
     // -------------------------------------------------------------------------
 
     playPulseEcho(dx, dy, distance, chargeLevel) {
         if (!this.enabled || !this.ctx) return;
 
-        const delay = distance / 1300;  // seconds — ~sonar return speed
+        const delay = distance / 1300;  // seconds - ~sonar return speed
         if (delay > 3.0) return;        // too far to hear
 
         const pan       = clamp(dx / 580, -1, 1);
@@ -613,12 +610,12 @@ export class AudioSystem {
         if (gain < 0.004) return;
 
         const now      = this.ctx.currentTime;
-        // Same duration formula as playPulse but compressed to ~42% — shorter return, clearly not another fresh pulse
+        // Same duration formula as playPulse but compressed to ~42% - shorter return, clearly not another fresh pulse
         const duration = (2.2 + chargeLevel * 1.8) * 0.42;
         // Same frequency region as the outgoing pulse so it sounds like the same tone coming back
         const rootFreq = 920 + chargeLevel * 520;
 
-        // Lowpass above the fundamental — passes the main tone but strips upper harmonics
+        // Lowpass above the fundamental - passes the main tone but strips upper harmonics
         // so it sounds muffled/returned rather than fresh
         const lowpass = this.ctx.createBiquadFilter();
         lowpass.type = 'lowpass';
@@ -633,7 +630,7 @@ export class AudioSystem {
         amp.gain.exponentialRampToValueAtTime(gain, now + delay + 0.018);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration);
 
-        // Two sawtooth partials — same character as the outgoing pulse, just fewer harmonics
+        // Two sawtooth partials - same character as the outgoing pulse, just fewer harmonics
         for (const [ratio, pgain, detune] of [[1.00, 0.68, -3], [1.51, 0.32, 4]]) {
             const osc = this.ctx.createOscillator();
             const pg  = this.ctx.createGain();
@@ -823,7 +820,7 @@ export class AudioSystem {
         const grains = Math.round(28 + 22 * signalLevel);
         const sampleRate = this.ctx.sampleRate;
 
-        // ── Noise path — routed directly to ctx.destination, bypassing the analyser.
+        // ── Noise path - routed directly to ctx.destination, bypassing the analyser.
         // Loud and audible but invisible on the spectrum display.
         const noiseFilter = this.ctx.createBiquadFilter();
         const noiseGain = this.ctx.createGain();
@@ -847,7 +844,7 @@ export class AudioSystem {
         noiseSource.stop(now + duration);
         noiseSource.onended = () => { noiseSource.disconnect(); noiseFilter.disconnect(); noiseGain.disconnect(); };
 
-        // ── Tone grains — routed through fxBus so they appear as a spike on the spectrum display.
+        // ── Tone grains - routed through fxBus so they appear as a spike on the spectrum display.
         const toneFilter = this.ctx.createBiquadFilter();
         const toneAmp = this.ctx.createGain();
         toneFilter.type = 'bandpass';

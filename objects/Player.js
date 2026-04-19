@@ -10,15 +10,15 @@ export class Player extends Phaser.GameObjects.Container {
         scene.physics.add.existing(this);
 
         // Tuning
-        this.rotationSpeed = 3;       // radians/sec — full turn in ~2s
+        this.rotationSpeed = 3;       // radians/sec - full turn in ~2s
         this.thrustAccel = 520;       // forward thrust strength
         this.reverseAccel = 320;      // reverse thrust strength (weaker)
         this.maxSpeed = 280;
-        this.drag = 0.5;              // low drag — space-ish, but not uncontrollable
+        this.drag = 0.5;              // low drag - space-ish, but not uncontrollable
 
-        // Hitbox — circular, centered
+        // Hitbox - circular, centered
         this.body.setCircle(12, -12, -12);
-        // No world-bounds collision — GameScene wraps the player via physics.world.wrap().
+        // No world-bounds collision - GameScene wraps the player via physics.world.wrap().
         this.body.setDamping(true);
         this.body.setDrag(this.drag, this.drag);
         this.body.setMaxVelocity(this.maxSpeed);
@@ -39,7 +39,7 @@ export class Player extends Phaser.GameObjects.Container {
         g.fillStyle(0xff3300, 0.9);
         g.fillCircle(-8, 0, 1.5);
 
-        // Ship body — triangle with a rear notch
+        // Ship body - triangle with a rear notch
         g.lineStyle(1.5, 0xffaa99);
         g.beginPath();
         g.moveTo(9, 0);

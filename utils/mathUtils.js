@@ -1,4 +1,4 @@
-// Canonical toroidal math helpers — single source for all wrap-around distance/delta.
+// Canonical toroidal math helpers - single source for all wrap-around distance/delta.
 
 export function wrappedDelta(from, to, worldSize) {
     let d = to - from;

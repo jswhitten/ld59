@@ -1,4 +1,4 @@
-// Seeker — faster ranged hunter that curves into attack runs, then breaks away.
+// Seeker - faster ranged hunter that curves into attack runs, then breaks away.
 
 import { Enemy } from './Enemy.js';
 
