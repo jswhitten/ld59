@@ -395,7 +395,7 @@ export class GameScene extends Phaser.Scene {
             if (enemy.isDead) { this.enemies.splice(i, 1); continue; }
 
             const playerDistance = wrappedDist(this.player.x, this.player.y, enemy.x, enemy.y, this.worldSize);
-            if (playerDistance <= this.enemyDetectionRange) {
+            if (playerDistance <= (enemy.detectionRange ?? this.enemyDetectionRange)) {
                 enemy.alert(this.player.x, this.player.y);
             }
 

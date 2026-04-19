@@ -17,12 +17,9 @@ export class Burst extends Enemy {
         this.dashSpeed = 360;
         this.rotationRate = Phaser.Math.FloatBetween(-0.35, 0.35);
         this.alertDuration = 7.0;
-        this.attackRange = 360;
-        this.fireCooldown = 2.2;
-        this.shotSpeed = 280;
-        this.aimError = 0.16;
+        this.detectionRange = 680;
         this.isKamikaze = true;
-        this.attackWindow = 1.9;
+        this.attackWindow = 1.4;
         this.maxSpeed = 390;
         this.scoreValue = 50;
         this.collisionDamage = 145;
@@ -34,9 +31,8 @@ export class Burst extends Enemy {
         this.setDriftVelocity();
     }
 
-    shouldFireAt(distance) {
-        return this.state !== 'dash' && super.shouldFireAt(distance);
-    }
+    shouldFireAt() { return false; }
+    shouldDecloakForAttack() { return false; }
 
     createVisual() {
         const g = this.scene.add.graphics();
@@ -114,7 +110,10 @@ export class Burst extends Enemy {
             }
 
             this.applyLocalAvoidance(dt, { rockForce: 260, shipForce: 180 });
-            if (this.stateTimer <= 0 && this.isAlert) this.beginDash();
+            if (this.isAlert && this.stateTimer <= this.decloakDuration && this.cloakPhase === 'cloaked') {
+                this.beginDecloak();
+            }
+            if (this.stateTimer <= 0 && this.isAlert && this.cloakPhase === 'decloaked') this.beginDash();
             return;
         }
 
