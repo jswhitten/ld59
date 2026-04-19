@@ -1,7 +1,7 @@
 // MenuScene
 // Scanner-style title reveal. The title starts invisible; each time the pulse
-// ring sweeps over it, it flashes to full brightness and then decays back toward
-// zero before the next pass.
+// ring sweeps over it, it flashes to full brightness and leaves a brief amber
+// echo before fading back toward zero before the next pass.
 
 export class MenuScene extends Phaser.Scene {
     constructor() {
@@ -25,16 +25,36 @@ export class MenuScene extends Phaser.Scene {
         this.titleDecayRate = -Math.log(0.08) / this.titleCycleTime;
 
         this.titleHitElapsed = null;
+        this.titleEchoElapsed = null;
         this.firstRevealDone = false;
 
         this.pulseGfx = this.add.graphics().setDepth(2);
+        this.titleEchoGfx = this.add.graphics().setDepth(2.5);
 
-        this.title = this.add.text(W / 2, H * 0.39, 'PULSE', {
+        const titleStyle = {
             fontFamily: 'Orbitron, sans-serif',
             fontSize: '72px',
             fontStyle: '700',
             color: '#7fffdf'
-        }).setOrigin(0.5).setAlpha(0).setDepth(3);
+        };
+
+        this.titleEchoes = [
+            { x: -7, y: 3, alpha: 0.24 },
+            { x: 8, y: 5, alpha: 0.15 },
+            { x: 0, y: 9, alpha: 0.10 }
+        ].map(echo => ({
+            ...echo,
+            text: this.add.text(W / 2 + echo.x, H * 0.39 + echo.y, 'PULSE', titleStyle)
+                .setOrigin(0.5)
+                .setAlpha(0)
+                .setTint(0xffbb66)
+                .setDepth(2.8)
+        }));
+
+        this.title = this.add.text(W / 2, H * 0.39, 'PULSE', titleStyle)
+            .setOrigin(0.5)
+            .setAlpha(0)
+            .setDepth(3);
 
         // Distance from pulse origin to title center (x is the same, so just y delta)
         this.titleDist = Math.abs(this.pulseOrigin.y - this.title.y);
@@ -70,12 +90,14 @@ export class MenuScene extends Phaser.Scene {
 
         this.updateTitle(dt, time);
         this.drawPulse();
+        this.drawTitleEcho(dt);
     }
 
     updateTitle(dt, time) {
         // Detect pulse ring crossing the title center this frame
         if (this.prevPulseRadius < this.titleDist && this.pulseRadius >= this.titleDist) {
             this.titleHitElapsed = 0;
+            this.titleEchoElapsed = 0;
             if (!this.firstRevealDone) {
                 this.firstRevealDone = true;
                 this.controls.setAlpha(0.68);
@@ -87,6 +109,10 @@ export class MenuScene extends Phaser.Scene {
         } else {
             const alpha = Math.exp(-this.titleDecayRate * this.titleHitElapsed);
             this.title.setAlpha(alpha < 0.01 ? 0 : alpha);
+            for (const echo of this.titleEchoes) {
+                const echoAlpha = Math.exp(-this.titleDecayRate * 2.2 * this.titleHitElapsed) * echo.alpha;
+                echo.text.setAlpha(echoAlpha < 0.01 ? 0 : echoAlpha);
+            }
             this.titleHitElapsed += dt;
         }
 
@@ -119,6 +145,29 @@ export class MenuScene extends Phaser.Scene {
             g.lineStyle(layerWidth, 0x7fffdf, alpha);
             g.strokeCircle(this.pulseOrigin.x, this.pulseOrigin.y, radius);
         }
+    }
+
+    drawTitleEcho(dt) {
+        const g = this.titleEchoGfx;
+        g.clear();
+        if (this.titleEchoElapsed === null) return;
+
+        const duration = 1.65;
+        const t = this.titleEchoElapsed / duration;
+        if (t >= 1) {
+            this.titleEchoElapsed = null;
+            return;
+        }
+
+        const alpha = Math.pow(1 - t, 1.25);
+        const radius = 34 + this.titleEchoElapsed * this.pulseSpeed;
+        const band = 5 + t * 10;
+        g.lineStyle(band, 0xffbb44, alpha * 0.22);
+        g.strokeCircle(this.title.x, this.title.y, radius);
+        g.lineStyle(2, 0xffdd88, alpha * 0.32);
+        g.strokeCircle(this.title.x, this.title.y, radius + 13);
+
+        this.titleEchoElapsed += dt;
     }
 
     startGame() {
