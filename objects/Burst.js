@@ -3,6 +3,7 @@
 
 import { Enemy } from './Enemy.js';
 import { wrappedDelta } from '../utils/mathUtils.js';
+import { drawBlipBrackets } from '../utils/renderUtils.js';
 
 export class Burst extends Enemy {
     static type = 'burst';
@@ -142,21 +143,7 @@ export class Burst extends Enemy {
         const charge = 1 - Math.max(0, this.stateTimer / 0.55);
         const blink = 0.55 + 0.45 * Math.sin(Date.now() * 0.028);
         const alpha = (0.25 + charge * 0.6) * blink;
-        const half = 19 + charge * 5;
-        const corner = 7;
 
-        this.warningGfx.lineStyle(1.4, 0xff6655, alpha);
-        this.warningGfx.lineBetween(-half, -half, -half + corner, -half);
-        this.warningGfx.lineBetween(-half, -half, -half, -half + corner);
-        this.warningGfx.lineBetween(half, -half, half - corner, -half);
-        this.warningGfx.lineBetween(half, -half, half, -half + corner);
-        this.warningGfx.lineBetween(-half, half, -half + corner, half);
-        this.warningGfx.lineBetween(-half, half, -half, half - corner);
-        this.warningGfx.lineBetween(half, half, half - corner, half);
-        this.warningGfx.lineBetween(half, half, half, half - corner);
-
-        this.warningGfx.lineStyle(1, 0xff6655, alpha * 0.65);
-        this.warningGfx.lineBetween(0, -half - 8, 0, -half - 2);
-        this.warningGfx.lineBetween(0, half + 2, 0, half + 8);
+        drawBlipBrackets(this.warningGfx, 0, 0, 19 + charge * 5, 7, 0xff6655, alpha, 1.4);
     }
 }
