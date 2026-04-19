@@ -77,6 +77,10 @@ export class Seeker extends Enemy {
         const dt = delta / 1000;
         this.rotation += this.rotationRate * dt;
 
+        const blink = Math.floor(this.scene.time.now / 180) % 2;
+        this.blueLights?.setAlpha(blink === 0 ? 1 : 0.08);
+        this.redLights?.setAlpha(blink === 1 ? 1 : 0.08);
+
         if (!this.isAlert || !this.lastKnownPos) {
             this.combatState = 'patrol';
             this.clampSpeed(this.driftSpeed);
@@ -88,9 +92,6 @@ export class Seeker extends Enemy {
         const playerVector = this.wrappedVectorTo(player.x, player.y);
         const playerDistance = Math.sqrt(playerVector.x * playerVector.x + playerVector.y * playerVector.y);
 
-        const blink = Math.floor(this.scene.time.now / 180) % 2;
-        this.blueLights?.setAlpha(blink === 0 ? 1 : 0.08);
-        this.redLights?.setAlpha(blink === 1 ? 1 : 0.08);
         if (this.combatState === 'patrol') {
             this.combatState = 'approach';
         }
