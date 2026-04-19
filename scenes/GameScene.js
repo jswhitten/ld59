@@ -986,7 +986,8 @@ export class GameScene extends Phaser.Scene {
     awardKill(x, y, wasBlind, enemy = null, options = {}) {
         const baseValue = enemy?.scoreValue ?? 10;
         const blindBonus = wasBlind ? 2 : 1;
-        const points = baseValue * this.multiplier * blindBonus;
+        const scoreMultiplier = this.multiplier;
+        const points = baseValue * scoreMultiplier * blindBonus;
         this.score += points;
         this.hitStreak += 1;
         this.multiplier = Math.min(8, 1 + Math.floor(this.hitStreak / 3));
@@ -995,7 +996,7 @@ export class GameScene extends Phaser.Scene {
         this.createFloatingScore(x, y, points, {
             blind: wasBlind,
             collision: options.collision,
-            multiplier: this.multiplier
+            multiplier: scoreMultiplier
         });
         this.revealEnemiesAt(x, y, 220, 0.9);
         this.audioSystem.playKill();
@@ -1039,23 +1040,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     createKillBurst(x, y) {
-        const gfx = this.add.graphics().setDepth(4);
         const maxRadius = 220;
-
-        this.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration: 420,
-            ease: 'Cubic.easeOut',
-            onUpdate: tween => {
-                const t = tween.getValue();
-                gfx.clear();
-                gfx.lineStyle(3, 0x4dff88, (1 - t) * 0.75);
-                gfx.strokeCircle(x, y, maxRadius * t);
-                gfx.fillStyle(0x4dff88, (1 - t) * 0.12);
-                gfx.fillCircle(x, y, maxRadius * 0.35 * t);
-            },
-            onComplete: () => gfx.destroy()
+        this.createEffectTween(4, 420, (gfx, t) => {
+            gfx.lineStyle(3, 0x4dff88, (1 - t) * 0.75);
+            gfx.strokeCircle(x, y, maxRadius * t);
+            gfx.fillStyle(0x4dff88, (1 - t) * 0.12);
+            gfx.fillCircle(x, y, maxRadius * 0.35 * t);
         });
     }
 
