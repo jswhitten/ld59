@@ -43,20 +43,20 @@ export class Burst extends Enemy {
         // Split arrowhead silhouette. The reddish inner facets mark it as the dash enemy.
         g.lineStyle(1.5, 0x4dff88, 0.95);
         g.beginPath();
-        g.moveTo(15, 0);
-        g.lineTo(3, 11);
+        g.moveTo(25, 0);
+        g.lineTo(3, 12);
         g.lineTo(-12, 8);
         g.lineTo(-5, 0);
         g.lineTo(-12, -8);
-        g.lineTo(3, -11);
+        g.lineTo(3, -12);
         g.closePath();
         g.strokePath();
 
-        g.lineStyle(1, 0xff6655, 0.62);
-        g.lineBetween(4, -7, 12, 0);
-        g.lineBetween(12, 0, 4, 7);
-        g.lineBetween(-7, -5, -1, 0);
-        g.lineBetween(-1, 0, -7, 5);
+        g.lineStyle(0.5, 0xff3300, 0.5);
+        g.lineBetween(3, -8, 3, 8);
+        g.lineBetween(21, 0, -3, 0);
+        g.fillStyle(0xff0000, 0.2);
+        g.fillCircle(3, 0, 3.5);
 
         this.add(g);
 
