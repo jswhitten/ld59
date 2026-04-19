@@ -17,12 +17,6 @@ import { submitHighScore, loadHighScores } from '../utils/highScores.js';
 import { wrappedDelta, wrappedDist } from '../utils/mathUtils.js';
 import { drawBlipBrackets } from '../utils/renderUtils.js';
 
-function proximityAlpha(distance, radius, minAlpha = 0.25, maxAlpha = 0.9) {
-    if (distance >= radius) return 0;
-    const t = 1 - distance / radius;
-    return minAlpha + (maxAlpha - minAlpha) * t;
-}
-
 export class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
@@ -103,7 +97,6 @@ export class GameScene extends Phaser.Scene {
         this.underAttackTimer = 0;
         this.survivalTime = 0;
         this.spawnTimer = 4;
-        this.shipVisualRange = 320;
         this.enemyDetectionRange = 420;
         this.shieldDamagePerHit = 72;
         this.meteoroidDamagePerHit = 22;
@@ -262,8 +255,6 @@ export class GameScene extends Phaser.Scene {
         this.lastStarPlayerX = this.player.x;
         this.lastStarPlayerY = this.player.y;
         this.centerCameraOnPlayer();
-
-        this.updateLocalVisibility();
 
         // --- Energy ---
         // isCharging reflects key state this frame; EnergySystem reads it in update().
@@ -1128,14 +1119,6 @@ export class GameScene extends Phaser.Scene {
 
         // Interval ramps from 5.2s at t=0 down to 1.4s floor at ~110s.
         this.spawnTimer = Math.max(1.4, 5.2 - this.survivalTime * 0.035);
-    }
-
-    updateLocalVisibility() {
-        for (const enemy of this.enemies) {
-            if (enemy.isDead) continue;
-            const d = wrappedDist(this.player.x, this.player.y, enemy.x, enemy.y, this.worldSize);
-            enemy.setLocalVisibility(proximityAlpha(d, this.shipVisualRange, 0.28, 0.95));
-        }
     }
 
     damagePlayer(options = {}) {

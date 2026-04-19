@@ -24,7 +24,6 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.revealDuration  = 0.16;
         this.revealTimer     = 0;
         this.revealBrightness = 1;
-        this.localVisibility = 0;
         this.isDead          = false;
         this.hp              = 1;
         this.radius          = 14;
@@ -106,10 +105,6 @@ export class Enemy extends Phaser.GameObjects.Container {
         this.lastKnownPos = { x: px, y: py };
     }
 
-    setLocalVisibility(alpha) {
-        this.localVisibility = Math.max(0, Math.min(1, alpha));
-    }
-
     takeDamage(amount = 1) {
         this.hp -= amount;
         if (this.hp <= 0) {
@@ -142,7 +137,7 @@ export class Enemy extends Phaser.GameObjects.Container {
             revealAlpha = Math.max(0, fade) * this.revealBrightness;
         }
 
-        const decloakAlpha = this.cloakAlpha * Math.max(0.88, this.localVisibility);
+        const decloakAlpha = this.cloakAlpha;
         this.setAlpha(Math.max(revealAlpha, decloakAlpha));
 
         // Alert indicator: faint pulsing red ring, visible only when revealed.
