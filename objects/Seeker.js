@@ -49,12 +49,28 @@ export class Seeker extends Enemy {
         g.closePath();
         g.strokePath();
 
-        g.lineStyle(1, 0x7dffad, 0.45);
+        g.lineStyle(0.5, 0x7dffad, 0.45);
         g.lineBetween(0, -10, 0, 10);
         g.lineBetween(-7, 0, 7, 0);
-        g.strokeCircle(0, 0, 4);
+        //g.strokeCircle(0, 0, 4);
 
         this.add(g);
+
+        // blinking nav lights
+        this.blueLights = this.scene.add.graphics();
+        this.blueLights.fillStyle(0x6688ff, 1);
+        this.blueLights.fillCircle(9, 0, 2);
+        this.blueLights.fillCircle(-9, 0, 2);
+        this.blueLights.postFX.addBloom(0x6688ff, 1, 1, 2.2, 4.0, 4);
+
+        this.redLights = this.scene.add.graphics();
+        this.redLights.fillStyle(0xff3333, 1);
+        this.redLights.fillCircle(0, 12, 2);
+        this.redLights.fillCircle(0, -12, 2);
+        this.redLights.postFX.addBloom(0xff3333, 1, 1, 2.2, 4.0, 4);
+
+        this.add(this.blueLights);
+        this.add(this.redLights);
     }
 
     updateMovement(delta) {
@@ -72,6 +88,9 @@ export class Seeker extends Enemy {
         const playerVector = this.wrappedVectorTo(player.x, player.y);
         const playerDistance = Math.sqrt(playerVector.x * playerVector.x + playerVector.y * playerVector.y);
 
+        const blink = Math.floor(this.scene.time.now / 180) % 2;
+        this.blueLights?.setAlpha(blink === 0 ? 1 : 0.08);
+        this.redLights?.setAlpha(blink === 1 ? 1 : 0.08);
         if (this.combatState === 'patrol') {
             this.combatState = 'approach';
         }
