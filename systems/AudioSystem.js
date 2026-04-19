@@ -152,14 +152,12 @@ export class AudioSystem {
         this.engineNoise = this.ctx.createBufferSource();
         this.engineNoiseGain = this.ctx.createGain();
         this.engineNoiseFilter = this.ctx.createBiquadFilter();
-
         this.engineNoise.buffer = buffer;
         this.engineNoise.loop = true;
-        this.engineNoiseGain.gain.value = 0.008;
+        this.engineNoiseGain.gain.value = 0;
         this.engineNoiseFilter.type = 'lowpass';
         this.engineNoiseFilter.frequency.value = 150;
         this.engineNoiseFilter.Q.value = 0.35;
-
         this.engineNoise.connect(this.engineNoiseFilter);
         this.engineNoiseFilter.connect(this.engineNoiseGain);
         this.engineNoiseGain.connect(this.fxBus);
@@ -216,8 +214,8 @@ export class AudioSystem {
 
         const thrust  = Math.abs(feed.playerThrust);
         const forward = feed.playerThrust > 0 ? 1 : 0;
-        this.engineGain.gain.setTargetAtTime(0.018 + thrust * (forward ? 0.075 : 0.035), now, 0.07);
-        this.engineNoiseGain.gain.setTargetAtTime(0.006 + thrust * (forward ? 0.06 : 0.026), now, 0.055);
+        this.engineGain.gain.setTargetAtTime(thrust * (forward ? 0.093 : 0.053), now, 0.07);
+        this.engineNoiseGain.gain.setTargetAtTime(thrust * (forward ? 0.06 : 0.026), now, 0.055);
         this.engineNoiseFilter.frequency.setTargetAtTime(120 + thrust * (forward ? 360 : 150), now, 0.07);
         this.engineOsc.frequency.setTargetAtTime(34 + thrust * (forward ? 24 : 12), now, 0.08);
 
