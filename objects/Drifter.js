@@ -48,20 +48,11 @@ export class Drifter extends Enemy {
         g.closePath();
         g.strokePath();
 
-        // Simple inner frame keeps it scanner-like without reading as a diamond.
-        g.lineStyle(1, 0x4dff88, 0.42);
+        // Simple inner frame
+        g.lineStyle(0.5, 0x4dff88, 0.42);
         g.lineBetween(-6, 0, 6, 0);
         g.lineBetween(-4, -5, 4, 5);
         g.lineBetween(4, -5, -4, 5);
-
-        // Central reactor and small side maneuvering ports.
-        g.fillStyle(0x4dff88, 0.34);
-        g.fillCircle(0, 0, 2.0);
-        g.lineStyle(1, 0xffdd88, 0.38);
-        g.lineBetween(-9, -2.2, -12, -2.2);
-        g.lineBetween(-9, 2.2, -12, 2.2);
-        g.lineBetween(9, -2.2, 12, -2.2);
-        g.lineBetween(9, 2.2, 12, 2.2);
 
         this.add(g);
     }
